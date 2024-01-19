@@ -17,6 +17,7 @@
     "prepare": "npx husky install"
   },
   "dependencies": {
+    "@better-scroll/core": "^2.5.1",
     "@vant/touch-emulator": "^1.4.0",
     "@vant/use": "^1.6.0",
     "axios": "^1.6.5",

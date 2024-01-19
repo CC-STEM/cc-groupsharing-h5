@@ -34,6 +34,7 @@ watch(checked, (val) => {
       <VanCell title="📊 Echarts 演示" to="charts" is-link />
 
       <VanCell title="🪶 Unocss 示例" to="unocss" is-link />
+      <VanCell title="拼团活动" to="GroupSharingHome" is-link />
 
       <VanCell center>
         <template #title>
