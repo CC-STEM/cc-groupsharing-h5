@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Chart: typeof import('./components/chart/index.vue')['default']
     GroupSharingCard: typeof import('./components/GroupSharingCard.vue')['default']
+    JoinGroupAvatarList: typeof import('./components/Card/JoinGroupAvatarList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VanButton: typeof import('vant/es')['Button']

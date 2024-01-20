@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import type { Card } from '@/typing'
-import { ref, onMounted } from 'vue'
-import GroupSharingCard from '@/components/GroupSharingCard.vue'
+import { onMounted, ref } from 'vue'
 import BScroll from '@better-scroll/core'
+import type { Avatar, Card } from '@/typing'
+import GroupSharingCard from '@/components/GroupSharingCard.vue'
+import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
+
+import Avatar1 from '@/assets/avatar1.jpg'
+import Avatar2 from '@/assets/avatar2.jpg'
+import Avatar3 from '@/assets/avatar3.jpg'
 
 const shopName = ref('门店名称AAA')
 const groupSharingStatus = ref('开团中')
@@ -35,10 +40,17 @@ const cardList = ref<Card[]>([{
   width: 618,
 }])
 
+const avatarList = ref<Avatar[]>([{
+  url: Avatar1,
+}, {
+  url: Avatar2,
+}, {
+  url: Avatar3,
+}])
+
 const scrollRef = ref(null)
 
 onMounted(() => {
-  console.log(scrollRef.value)
   const scrollIns = new BScroll(scrollRef.value, {
     probeType: 3,
     scrollX: true,
@@ -57,10 +69,11 @@ onMounted(() => {
   scrollIns.scrollTo(-(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth) / 2, 0)
 })
 </script>
+
 <template>
   <div class="container">
     <div class="header">
-      <img class="adImg" src="@/assets/ad.png" />
+      <img class="adImg" src="@/assets/ad.png">
       <div class="sharingBar">
         <div class="left">
           <span>{{ shopName }}</span>
@@ -69,17 +82,40 @@ onMounted(() => {
           <span>{{ groupSharingStatus }}</span>
         </div>
       </div>
-      <div class="cardContainer" ref="scrollRef">
+      <div ref="scrollRef" class="cardContainer">
         <div class="subContainer">
-          <group-sharing-card v-for="item in cardList" :is-active-style="item.isActiveStyle" :course-num="item.courseNum"
-            :end-time="item.endTime" :width="item.width" :name="item.name" :detail="item.detail" :part-num="item.partNum"
-            :price="item.price"></group-sharing-card>
+          <GroupSharingCard
+            v-for="(item, index) in cardList" :key="index"
+            :is-active-style="item.isActiveStyle" :course-num="item.courseNum" :end-time="item.endTime" :width="item.width" :name="item.name"
+            :detail="item.detail" :part-num="item.partNum" :price="item.price"
+          />
         </div>
       </div>
+      <div class="shareBtn">
+        分享
+      </div>
     </div>
-    <div class="content"></div>
+    <div class="content">
+      <div class="contentTitle">
+        <div class="firstTitle">
+          参与拼团
+        </div>
+        <div class="secondTitle">
+          王梓峰 邀请您来参与拼团啦!
+        </div>
+      </div>
+      <div class="joinGroup">
+        <JoinGroupAvatarList :avatar-list="avatarList" />
+      </div>
+      <div class="joinGroupPlay" />
+      <div class="joinGroupRule" />
+      <div class="contentFooter">
+        本活动最终解释权归XXXX所有
+      </div>
+    </div>
   </div>
 </template>
+
 <style lang="less" scoped>
 .container {
   width: 750px;
@@ -171,6 +207,24 @@ onMounted(() => {
         // justify-content: center;
       }
     }
+
+    .shareBtn {
+      position: absolute;
+      top: 104px;
+      right: 0px;
+      width: 87px;
+      height: 47px;
+      background: linear-gradient(90deg, #FFBD4A, #FFAA25, #FF4F0A);
+      box-shadow: 0px 1px 25px 2px rgba(0, 0, 0, 0.26);
+      border-top-left-radius: 24px;
+      border-bottom-left-radius: 24px;
+      font-size: 28px;
+      font-family: PingFang SC;
+      font-weight: bold;
+      color: #FFFFFF;
+      text-align: center;
+      line-height: 47px;
+    }
   }
 
   .content {
@@ -178,6 +232,63 @@ onMounted(() => {
     background-image: url('@/assets/shareBackground.png');
     background-repeat: no-repeat;
     background-size: 100% 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .contentTitle {
+      padding-top: 40px;
+      padding-bottom: 27px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      .firstTitle {
+        font-size: 40px;
+        font-family: PingFang SC;
+        font-weight: 800;
+        color: #FFFFFF;
+      }
+
+      .secondTitle {
+        font-size: 28px;
+        font-family: PingFang SC;
+        font-weight: 800;
+        color: #FFFFFF;
+      }
+    }
+
+    .joinGroup {
+      width: 700px;
+      height: 324px;
+      background: #FFFFFF;
+      border-radius: 30px;
+      margin-bottom: 22px;
+    }
+
+    .joinGroupPlay {
+      width: 700px;
+      height: 330px;
+      background: #FFFFFF;
+      border-radius: 30px;
+      margin-bottom: 24px;
+    }
+
+    .joinGroupRule {
+      width: 700px;
+      height: 669px;
+      background: #FFFFFF;
+      border-radius: 30px;
+      margin-bottom: 24px;
+    }
+
+    .contentFooter {
+      font-size: 24px;
+      font-family: PingFang SC;
+      font-weight: 400;
+      color: #E43E12;
+    }
   }
 }
 </style>

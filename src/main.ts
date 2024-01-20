@@ -23,6 +23,7 @@ import 'vant/es/dialog/style'
 import 'vant/es/notify/style'
 import 'vant/es/image-preview/style'
 import '@/assets/font/font.css'
+import '@/assets/global.less'
 
 const app = createApp(App)
 const pinia = createPinia()
