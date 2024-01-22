@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    CardDescDetail: typeof import('./components/Card/CardDescDetail.vue')['default']
     Chart: typeof import('./components/chart/index.vue')['default']
     GroupPlayIItem: typeof import('./components/GroupPlayIItem.vue')['default']
     GroupPlayItem: typeof import('./components/GroupPlayItem.vue')['default']
@@ -18,6 +19,7 @@ declare module 'vue' {
     VanCell: typeof import('vant/es')['Cell']
     VanCellGroup: typeof import('vant/es')['CellGroup']
     VanConfigProvider: typeof import('vant/es')['ConfigProvider']
+    VanNavBar: typeof import('vant/es')['NavBar']
     VanSwitch: typeof import('vant/es')['Switch']
     VanTag: typeof import('vant/es')['Tag']
   }

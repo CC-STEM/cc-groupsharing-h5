@@ -39,7 +39,7 @@ const backImgUrl = computed(() => props.isActiveStyle ? `url(${ValidCardBackImg}
   background-image: v-bind(backImgUrl);
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  margin: 0 15px;
+
   position: relative;
 
   .cardName {

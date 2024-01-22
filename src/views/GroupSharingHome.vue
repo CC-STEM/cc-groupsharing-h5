@@ -5,7 +5,9 @@ import type { Avatar, Card } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
+import CardDescDetail from '@/components/Card/CardDescDetail.vue'
 import type { PlayItem } from '@/typing'
+import { useRouter } from 'vue-router'
 
 import Avatar1 from '@/assets/pic1.jpg'
 import Avatar2 from '@/assets/pic2.jpg'
@@ -17,6 +19,7 @@ import play3 from '@/assets/play3.png'
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
 
+const router = useRouter()
 const shopName = ref('门店名称AAA')
 const groupSharingStatus = ref('开团中')
 const cardList = ref<Card[]>([{
@@ -48,6 +51,8 @@ const cardList = ref<Card[]>([{
   width: 618,
 }])
 
+const curSelectedCard = ref<Card | null>(null)
+
 const avatarList = ref<Avatar[]>([{
   url: Avatar1,
 }, {
@@ -57,7 +62,9 @@ const avatarList = ref<Avatar[]>([{
 }])
 
 const scrollRef = ref(null)
-const showCardDetailSheet = ref(false)
+const showCardDetailSheetOption = ref({
+  show: false
+})
 
 const playList: PlayItem[] = [{
   imgUrl: play1,
@@ -75,9 +82,10 @@ const playList: PlayItem[] = [{
   subTitle: ''
 }]
 
-const clickDetail = () => {
+const clickDetail = (curCard: Card) => {
   console.log('click---')
-  showCardDetailSheet.value = true
+  showCardDetailSheetOption.value = { show: true }
+  curSelectedCard.value = curCard
 }
 
 onMounted(() => {
@@ -115,9 +123,10 @@ onMounted(() => {
       </div>
       <div ref="scrollRef" class="cardContainer">
         <div class="subContainer">
-          <GroupSharingCard v-for="(item, index) in cardList" :key="index" :is-active-style="item.isActiveStyle"
-            :course-num="item.courseNum" :end-time="item.endTime" :width="item.width" :name="item.name"
-            :detail="item.detail" :part-num="item.partNum" :price="item.price" @detailClick="clickDetail" />
+          <GroupSharingCard class="sharingCard" v-for="(item, index) in cardList" :key="index"
+            :is-active-style="item.isActiveStyle" :course-num="item.courseNum" :end-time="item.endTime"
+            :width="item.width" :name="item.name" :detail="item.detail" :part-num="item.partNum" :price="item.price"
+            @detailClick="clickDetail(item)" />
         </div>
       </div>
       <div class="shareBtn">
@@ -153,7 +162,8 @@ onMounted(() => {
       <div class="joinGroupPlay">
         <div class="top">
           <div class="name">拼团玩法 <img class="downArrow" :src="DownArrow" alt=""></div>
-          <div class="orders">我的拼团订单 <img class="rightArrow" :src="RightArrow" alt=""></div>
+          <div class="orders" @click="() => { router.push('/Order') }">我的拼团订单 <img class="rightArrow" :src="RightArrow"
+              alt=""></div>
         </div>
         <div class="playContent">
           <group-play-item v-for="item in playList" :img-url="item.imgUrl" :title="item.title"
@@ -182,13 +192,35 @@ onMounted(() => {
         本活动最终解释权归XXXX所有
       </div>
     </div>
-    <van-action-sheet v-model:show="showCardDetailSheet" title="详情说明" cancel-text="我知道了">
-      <div class="sheetContent">内容</div>
-    </van-action-sheet>
+    <card-desc-detail v-if="curSelectedCard" v-model:show-option="showCardDetailSheetOption"
+      :cur-selected-card="curSelectedCard"></card-desc-detail>
   </div>
 </template>
 
 <style lang="less" scoped>
+:deep(.van-action-sheet) {
+  align-items: center;
+
+  .detailTitle {
+    max-width: 618px;
+    font-size: 30px;
+    font-family: PingFang SC;
+    font-weight: 800;
+    color: #000000;
+    margin-top: 39px;
+    margin-bottom: 25px;
+  }
+
+  .detailDesc {
+    max-width: 618px;
+    font-size: 28px;
+    font-family: PingFang SC;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 97px;
+  }
+}
+
 :deep(.van-action-sheet__header) {
   font-size: 40px;
   font-family: PingFang SC;
@@ -196,6 +228,21 @@ onMounted(() => {
   color: #000000;
   margin-top: 50px;
   margin-bottom: 43px;
+}
+
+
+:deep(.van-action-sheet__cancel) {
+  width: 622px;
+  height: 88px;
+  // background: linear-gradient(90deg, #FABC4F, #FF3A05);
+  border: 1px solid #FF3E07;
+  // border-image: linear-gradient(0deg, #FF3E07, #FAB84D) 1 1;
+  border-radius: 44px;
+
+  font-size: 30px;
+  font-family: PingFang SC;
+  font-weight: 500;
+  color: #FF460C;
 }
 
 .container {
@@ -283,9 +330,13 @@ onMounted(() => {
         display: flex;
         // float: left;
         align-items: center;
+
         // margin: auto;
         // left: -50%;
         // justify-content: center;
+        .sharingCard {
+          margin: 0 15px;
+        }
       }
     }
 
