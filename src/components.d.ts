@@ -8,18 +8,16 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Chart: typeof import('./components/chart/index.vue')['default']
+    GroupPlayIItem: typeof import('./components/GroupPlayIItem.vue')['default']
+    GroupPlayItem: typeof import('./components/GroupPlayItem.vue')['default']
     GroupSharingCard: typeof import('./components/GroupSharingCard.vue')['default']
     JoinGroupAvatarList: typeof import('./components/Card/JoinGroupAvatarList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    VanButton: typeof import('vant/es')['Button']
+    VanActionSheet: typeof import('vant/es')['ActionSheet']
     VanCell: typeof import('vant/es')['Cell']
     VanCellGroup: typeof import('vant/es')['CellGroup']
     VanConfigProvider: typeof import('vant/es')['ConfigProvider']
-    VanEmpty: typeof import('vant/es')['Empty']
-    VanNavBar: typeof import('vant/es')['NavBar']
-    VanSwipe: typeof import('vant/es')['Swipe']
-    VanSwipeItem: typeof import('vant/es')['SwipeItem']
     VanSwitch: typeof import('vant/es')['Switch']
     VanTag: typeof import('vant/es')['Tag']
   }

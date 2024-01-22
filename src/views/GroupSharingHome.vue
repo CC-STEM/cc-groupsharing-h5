@@ -4,10 +4,18 @@ import BScroll from '@better-scroll/core'
 import type { Avatar, Card } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
+import GroupPlayItem from '@/components/GroupPlayItem.vue'
+import type { PlayItem } from '@/typing'
 
-import Avatar1 from '@/assets/avatar1.jpg'
-import Avatar2 from '@/assets/avatar2.jpg'
-import Avatar3 from '@/assets/avatar3.jpg'
+import Avatar1 from '@/assets/pic1.jpg'
+import Avatar2 from '@/assets/pic2.jpg'
+import Avatar3 from '@/assets/pic5.jpg'
+import play1 from '@/assets/play1.png'
+import play2 from '@/assets/play2.png'
+import play3 from '@/assets/play3.png'
+
+import DownArrow from '@/assets/downArrow.png'
+import RightArrow from '@/assets/rightArrow.png'
 
 const shopName = ref('门店名称AAA')
 const groupSharingStatus = ref('开团中')
@@ -49,11 +57,34 @@ const avatarList = ref<Avatar[]>([{
 }])
 
 const scrollRef = ref(null)
+const showCardDetailSheet = ref(false)
+
+const playList: PlayItem[] = [{
+  imgUrl: play1,
+  title: '开团/参团',
+  subTitle: '拼团享低价'
+},
+{
+  imgUrl: play2,
+  title: '邀请新用户参团',
+  subTitle: '分享优惠多'
+},
+{
+  imgUrl: play3,
+  title: '2人成团',
+  subTitle: ''
+}]
+
+const clickDetail = () => {
+  console.log('click---')
+  showCardDetailSheet.value = true
+}
 
 onMounted(() => {
   const scrollIns = new BScroll(scrollRef.value, {
     probeType: 3,
     scrollX: true,
+    click: true
   })
 
   scrollIns.on('scrollStart', () => {
@@ -84,11 +115,9 @@ onMounted(() => {
       </div>
       <div ref="scrollRef" class="cardContainer">
         <div class="subContainer">
-          <GroupSharingCard
-            v-for="(item, index) in cardList" :key="index"
-            :is-active-style="item.isActiveStyle" :course-num="item.courseNum" :end-time="item.endTime" :width="item.width" :name="item.name"
-            :detail="item.detail" :part-num="item.partNum" :price="item.price"
-          />
+          <GroupSharingCard v-for="(item, index) in cardList" :key="index" :is-active-style="item.isActiveStyle"
+            :course-num="item.courseNum" :end-time="item.endTime" :width="item.width" :name="item.name"
+            :detail="item.detail" :part-num="item.partNum" :price="item.price" @detailClick="clickDetail" />
         </div>
       </div>
       <div class="shareBtn">
@@ -105,18 +134,70 @@ onMounted(() => {
         </div>
       </div>
       <div class="joinGroup">
-        <JoinGroupAvatarList :avatar-list="avatarList" />
+        <join-group-avatar-list :avatar-list="avatarList" :is-support-add="true" />
+        <div class="btnList">
+          <div class="singleBuyBtn">
+            <div class="price">￥88.00</div>
+            <div class="desc">单独购买</div>
+          </div>
+          <div class="createGroupBtn">
+            <div class="price">￥55.00</div>
+            <div class="desc">发起拼团</div>
+          </div>
+          <div class="joinGroupBtn" v-if="false">
+            <div class="desc">立即参团</div>
+            <div class="price">￥55.00</div>
+          </div>
+        </div>
       </div>
-      <div class="joinGroupPlay" />
-      <div class="joinGroupRule" />
+      <div class="joinGroupPlay">
+        <div class="top">
+          <div class="name">拼团玩法 <img class="downArrow" :src="DownArrow" alt=""></div>
+          <div class="orders">我的拼团订单 <img class="rightArrow" :src="RightArrow" alt=""></div>
+        </div>
+        <div class="playContent">
+          <group-play-item v-for="item in playList" :img-url="item.imgUrl" :title="item.title"
+            :subTitle="item.subTitle"></group-play-item>
+        </div>
+      </div>
+      <div class="joinGroupRule">
+        <div class="top">
+          <div class="name">拼团规则 <img class="downArrow" :src="DownArrow" alt=""></div>
+        </div>
+        <div class="ruleContent">
+          1．发团：拼团活动期间，用户可在微信公众号、小程序等发起拼团。
+          <br />
+          2．参团：参加朋友发起的拼团。
+          <br />
+          3．限量：每个拼团活动进行期间，每位用户限参团一次。若拼团失败后可重新开团或参团。多个拼团在规定时间内满足拼团成功，视第一个完成的拼团订单为有效订单。
+          <br />
+          4．拼团人数：拼团人数可大于拼团要求人数。即拼团成功后，新参与者可继续参与拼团，直到倒计时结束。
+          <br />
+          5．成功：规定时间内团购人数满足拼团要求人数（包括团长），视为拼团成功。
+          <br />
+          6．失败：逾期人数未满足要求人数即为拼团失败，系统将发起退款，退款将于1—5个工作日原路返回。
+        </div>
+      </div>
       <div class="contentFooter">
         本活动最终解释权归XXXX所有
       </div>
     </div>
+    <van-action-sheet v-model:show="showCardDetailSheet" title="详情说明" cancel-text="我知道了">
+      <div class="sheetContent">内容</div>
+    </van-action-sheet>
   </div>
 </template>
 
 <style lang="less" scoped>
+:deep(.van-action-sheet__header) {
+  font-size: 40px;
+  font-family: PingFang SC;
+  font-weight: 800;
+  color: #000000;
+  margin-top: 50px;
+  margin-bottom: 43px;
+}
+
 .container {
   width: 750px;
   // width: 100vw;
@@ -265,6 +346,101 @@ onMounted(() => {
       background: #FFFFFF;
       border-radius: 30px;
       margin-bottom: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding-top: 37px;
+
+      .btnList {
+        margin-top: 51px;
+        height: 88px;
+        width: auto;
+        display: flex;
+
+        .singleBuyBtn {
+          width: 320px;
+          height: 88px;
+          // background: linear-gradient(90deg, #FABC4F, #FF3A05);
+          border: 1px solid #FF3E07;
+          // border-image: linear-gradient(0deg, #FF3E07, #FAB84D) 1 1;
+          border-radius: 44px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-around;
+          margin-right: 12px;
+
+          .price {
+            // height: 28px;
+            font-size: 36px;
+            font-family: PingFang SC;
+            font-weight: 800;
+            color: #FF460C;
+            // margin-bottom: 12px;
+          }
+
+          .desc {
+            // height: 23px;
+            font-size: 24px;
+            font-family: PingFang SC;
+            font-weight: 500;
+            color: #FF460C;
+          }
+        }
+
+        .createGroupBtn {
+          width: 320px;
+          height: 88px;
+          background: linear-gradient(179deg, #FFE691, #FF3A05);
+          border-radius: 44px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-around;
+
+          .price {
+            // height: 28px;
+            font-size: 36px;
+            font-family: PingFang SC;
+            font-weight: 800;
+            color: #FFFFFF;
+          }
+
+          .desc {
+            // height: 23px;
+            font-size: 24px;
+            font-family: PingFang SC;
+            font-weight: 500;
+            color: #FFFFFF;
+          }
+        }
+
+        .joinGroupBtn {
+          display: flex;
+          // flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 637px;
+          // height: 88px;
+          background: linear-gradient(179deg, #FFE691, #FF3A05);
+          border-radius: 44px;
+
+          .price {
+            font-size: 36px;
+            font-family: PingFang SC;
+            font-weight: 800;
+            color: #FFFFFF;
+          }
+
+          .desc {
+            font-size: 24px;
+            font-family: PingFang SC;
+            font-weight: 500;
+            color: #FFFFFF;
+          }
+        }
+      }
     }
 
     .joinGroupPlay {
@@ -273,6 +449,60 @@ onMounted(() => {
       background: #FFFFFF;
       border-radius: 30px;
       margin-bottom: 24px;
+      display: flex;
+      // justify-content: center;
+      flex-direction: column;
+      align-items: center;
+
+      .top {
+        margin-top: 39px;
+        width: 648px;
+        display: flex;
+        justify-content: space-between;
+
+        .name {
+          height: 31px;
+          font-size: 32px;
+          font-family: PingFang SC;
+          font-weight: 800;
+          color: #1A1A1A;
+          position: relative;
+
+          .downArrow {
+            width: 40px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -30px;
+          }
+        }
+
+        .orders {
+          // height: 27px;
+          // line-height: 27px;
+          font-size: 28px;
+          font-family: PingFang SC;
+          font-weight: 800;
+          color: #1A1A1A;
+          position: relative;
+          margin-right: 26px;
+
+          .rightArrow {
+            // width: 20px;
+            // height: 20px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+        }
+      }
+
+      .playContent {
+        margin-top: 54px;
+        width: 648px;
+        display: flex;
+        justify-content: space-between;
+      }
     }
 
     .joinGroupRule {
@@ -281,6 +511,43 @@ onMounted(() => {
       background: #FFFFFF;
       border-radius: 30px;
       margin-bottom: 24px;
+      display: flex;
+      // justify-content: center;
+      flex-direction: column;
+      align-items: center;
+
+      .top {
+        margin-top: 39px;
+        margin-bottom: 53px;
+        width: 648px;
+        display: flex;
+        justify-content: space-between;
+
+        .name {
+          height: 31px;
+          font-size: 32px;
+          font-family: PingFang SC;
+          font-weight: 800;
+          color: #1A1A1A;
+          position: relative;
+
+          .downArrow {
+            width: 40px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -30px;
+          }
+        }
+      }
+
+      .ruleContent {
+        width: 648px;
+        font-size: 24px;
+        font-family: PingFang SC;
+        font-weight: 400;
+        color: #666666;
+      }
     }
 
     .contentFooter {

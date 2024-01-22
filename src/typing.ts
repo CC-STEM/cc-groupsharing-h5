@@ -18,3 +18,9 @@ export interface Avatar {
   url: string
   name?: string
 }
+
+export interface PlayItem {
+  imgUrl: string;
+  title: string;
+  subTitle?: string;
+}
