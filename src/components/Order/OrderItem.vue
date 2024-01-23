@@ -1,28 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Card } from '@/typing'
+import type { OrderInfo } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 
-interface Props {
-  card: Card
-  avatarList: Avatar[]
-  // orderStatus:
-}
-const props = defineProps<Props>()
+const props = defineProps<OrderInfo>()
 const curEmits = defineEmits(['detailClick'])
 const curCard = computed(() => props.card)
 </script>
 
 <template>
   <div class="orderItemContainer">
-    <GroupSharingCard
-      class="orderSharingCard" :is-active-style="curCard.isActiveStyle" :course-num="curCard.courseNum"
+    <GroupSharingCard class="orderSharingCard" :is-active-style="curCard.isActiveStyle" :course-num="curCard.courseNum"
       :end-time="curCard.endTime" :width="curCard.width" :name="curCard.name" :detail="curCard.detail"
-      :part-num="curCard.partNum" :price="curCard.price" @detail-click="curEmits('detailClick')"
-    />
+      :part-num="curCard.partNum" :price="curCard.price" @detail-click="curEmits('detailClick')" />
     <div class="opBox">
-      <JoinGroupAvatarList />
+      <JoinGroupAvatarList :avatar-list="avatarList" :is-support-add="false" />
     </div>
   </div>
 </template>

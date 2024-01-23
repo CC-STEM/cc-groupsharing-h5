@@ -27,7 +27,7 @@ const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 14))
         团长
       </div>
     </div>
-    <div v-if="props.isSupportAdd && props.avatarList.length < 5" class="avatarItem">
+    <div v-if="props.avatarList.length < 5" class="avatarItem">
       <img :src="AddImg" alt="">
     </div>
   </div>

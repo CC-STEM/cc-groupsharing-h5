@@ -25,6 +25,26 @@ export interface PlayItem {
   subTitle?: string
 }
 
-export enum ORDER_STATUS_CN_MAP {
-  COMPLETED = '',
+export interface OrderInfo {
+  card: Card
+  avatarList: Avatar[]
+  orderStatus: ORDER_STATUS_ENUM
+}
+
+export enum ORDER_STATUS_ENUM {
+  COMPLETED = 'COMPLETED',
+  UNCOMPLETED = 'UNCOMPLETED',
+  INVALID = 'INVALID'
+}
+
+export const ORDER_STATUS_CN_MAP = {
+  [ORDER_STATUS_ENUM.COMPLETED]: '已拼成',
+  [ORDER_STATUS_ENUM.UNCOMPLETED]: '未拼成',
+  [ORDER_STATUS_ENUM.INVALID]: '已失效'
+}
+
+export const ORDER_OP_TEXT = {
+  [ORDER_STATUS_ENUM.COMPLETED]: '去使用',
+  [ORDER_STATUS_ENUM.UNCOMPLETED]: '邀请好友',
+  [ORDER_STATUS_ENUM.INVALID]: '删除订单'
 }
