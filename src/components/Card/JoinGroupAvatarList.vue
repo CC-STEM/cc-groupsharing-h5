@@ -15,7 +15,7 @@ interface Props {
 const props = defineProps<Props>()
 const realAvatarWidth = computed(() => px2vw(props.avatarWidth || 114))
 const realAvatarHeight = computed(() => px2vw(props.avatarHeight || 114))
-const realAvatarNameLeft = computed(() => px2vw(props.avatarHeight || 57))
+// const realAvatarNameLeft = computed(() => px2vw(props.avatarHeight || 57))
 const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 14))
 </script>
 
@@ -23,7 +23,9 @@ const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 14))
   <div class="avatarContainer">
     <div v-for="(item, index) in props.avatarList" :key="index" class="avatarItem">
       <img :src="item.url" alt="">
-      <div v-if="index === 0" class="avatarName">团长</div>
+      <div v-if="index === 0" class="avatarName">
+        团长
+      </div>
     </div>
     <div v-if="props.isSupportAdd && props.avatarList.length < 5" class="avatarItem">
       <img :src="AddImg" alt="">

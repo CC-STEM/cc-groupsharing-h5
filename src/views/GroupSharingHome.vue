@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import BScroll from '@better-scroll/core'
-import type { Avatar, Card } from '@/typing'
+import { useRouter } from 'vue-router'
+import type { Avatar, Card, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
 import CardDescDetail from '@/components/Card/CardDescDetail.vue'
-import type { PlayItem } from '@/typing'
-import { useRouter } from 'vue-router'
 
 import Avatar1 from '@/assets/pic1.jpg'
 import Avatar2 from '@/assets/pic2.jpg'
@@ -63,26 +62,24 @@ const avatarList = ref<Avatar[]>([{
 
 const scrollRef = ref(null)
 const showCardDetailSheetOption = ref({
-  show: false
+  show: false,
 })
 
 const playList: PlayItem[] = [{
   imgUrl: play1,
   title: '开团/参团',
-  subTitle: '拼团享低价'
-},
-{
+  subTitle: '拼团享低价',
+}, {
   imgUrl: play2,
   title: '邀请新用户参团',
-  subTitle: '分享优惠多'
-},
-{
+  subTitle: '分享优惠多',
+}, {
   imgUrl: play3,
   title: '2人成团',
-  subTitle: ''
+  subTitle: '',
 }]
 
-const clickDetail = (curCard: Card) => {
+function clickDetail(curCard: Card) {
   console.log('click---')
   showCardDetailSheetOption.value = { show: true }
   curSelectedCard.value = curCard
@@ -92,7 +89,7 @@ onMounted(() => {
   const scrollIns = new BScroll(scrollRef.value, {
     probeType: 3,
     scrollX: true,
-    click: true
+    click: true,
   })
 
   scrollIns.on('scrollStart', () => {
@@ -123,10 +120,12 @@ onMounted(() => {
       </div>
       <div ref="scrollRef" class="cardContainer">
         <div class="subContainer">
-          <GroupSharingCard class="sharingCard" v-for="(item, index) in cardList" :key="index"
+          <GroupSharingCard
+            v-for="(item, index) in cardList" :key="index" class="sharingCard"
             :is-active-style="item.isActiveStyle" :course-num="item.courseNum" :end-time="item.endTime"
             :width="item.width" :name="item.name" :detail="item.detail" :part-num="item.partNum" :price="item.price"
-            @detailClick="clickDetail(item)" />
+            @detail-click="clickDetail(item)"
+          />
         </div>
       </div>
       <div class="shareBtn">
@@ -143,48 +142,67 @@ onMounted(() => {
         </div>
       </div>
       <div class="joinGroup">
-        <join-group-avatar-list :avatar-list="avatarList" :is-support-add="true" />
+        <JoinGroupAvatarList :avatar-list="avatarList" :is-support-add="true" />
         <div class="btnList">
           <div class="singleBuyBtn">
-            <div class="price">￥88.00</div>
-            <div class="desc">单独购买</div>
+            <div class="price">
+              ￥88.00
+            </div>
+            <div class="desc">
+              单独购买
+            </div>
           </div>
           <div class="createGroupBtn">
-            <div class="price">￥55.00</div>
-            <div class="desc">发起拼团</div>
+            <div class="price">
+              ￥55.00
+            </div>
+            <div class="desc">
+              发起拼团
+            </div>
           </div>
-          <div class="joinGroupBtn" v-if="false">
-            <div class="desc">立即参团</div>
-            <div class="price">￥55.00</div>
+          <div v-if="false" class="joinGroupBtn">
+            <div class="desc">
+              立即参团
+            </div>
+            <div class="price">
+              ￥55.00
+            </div>
           </div>
         </div>
       </div>
       <div class="joinGroupPlay">
         <div class="top">
-          <div class="name">拼团玩法 <img class="downArrow" :src="DownArrow" alt=""></div>
-          <div class="orders" @click="() => { router.push('/Order') }">我的拼团订单 <img class="rightArrow" :src="RightArrow"
-              alt=""></div>
+          <div class="name">
+            拼团玩法 <img class="downArrow" :src="DownArrow" alt="">
+          </div>
+          <div class="orders" @click="() => { router.push('/Order') }">
+            我的拼团订单 <img class="rightArrow" :src="RightArrow" alt="">
+          </div>
         </div>
         <div class="playContent">
-          <group-play-item v-for="item in playList" :img-url="item.imgUrl" :title="item.title"
-            :subTitle="item.subTitle"></group-play-item>
+          <GroupPlayItem
+            v-for="(item, index) in playList" :key="index" :img-url="item.imgUrl" :title="item.title"
+            :sub-title="item.subTitle"
+          />
         </div>
       </div>
       <div class="joinGroupRule">
         <div class="top">
-          <div class="name">拼团规则 <img class="downArrow" :src="DownArrow" alt=""></div>
+          <div class="name">
+            拼团规则 <img class="downArrow" :src="DownArrow" alt="">
+          </div>
         </div>
         <div class="ruleContent">
           1．发团：拼团活动期间，用户可在微信公众号、小程序等发起拼团。
-          <br />
+          <br>
           2．参团：参加朋友发起的拼团。
-          <br />
+          <br>
           3．限量：每个拼团活动进行期间，每位用户限参团一次。若拼团失败后可重新开团或参团。多个拼团在规定时间内满足拼团成功，视第一个完成的拼团订单为有效订单。
-          <br />
+          <br>
           4．拼团人数：拼团人数可大于拼团要求人数。即拼团成功后，新参与者可继续参与拼团，直到倒计时结束。
-          <br />
+          <br>
           5．成功：规定时间内团购人数满足拼团要求人数（包括团长），视为拼团成功。
-          <br />
+          <br>
           6．失败：逾期人数未满足要求人数即为拼团失败，系统将发起退款，退款将于1—5个工作日原路返回。
         </div>
       </div>
@@ -192,8 +210,10 @@ onMounted(() => {
         本活动最终解释权归XXXX所有
       </div>
     </div>
-    <card-desc-detail v-if="curSelectedCard" v-model:show-option="showCardDetailSheetOption"
-      :cur-selected-card="curSelectedCard"></card-desc-detail>
+    <CardDescDetail
+      v-if="curSelectedCard" v-model:show-option="showCardDetailSheetOption"
+      :cur-selected-card="curSelectedCard"
+    />
   </div>
 </template>
 
@@ -229,7 +249,6 @@ onMounted(() => {
   margin-top: 50px;
   margin-bottom: 43px;
 }
-
 
 :deep(.van-action-sheet__cancel) {
   width: 622px;

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-const onClickLeft = () => { }
+function onClickLeft() { }
 </script>
+
 <template>
   <div class="orderContainer">
     <van-nav-bar title="我的拼团订单" left-arrow @click-left="onClickLeft" />
   </div>
 </template>
+
 <style lang="less" scoped>
 .orderContainer {
   width: 100vw;

@@ -13,6 +13,7 @@ declare module 'vue' {
     GroupPlayItem: typeof import('./components/GroupPlayItem.vue')['default']
     GroupSharingCard: typeof import('./components/GroupSharingCard.vue')['default']
     JoinGroupAvatarList: typeof import('./components/Card/JoinGroupAvatarList.vue')['default']
+    OrderItem: typeof import('./components/Order/OrderItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VanActionSheet: typeof import('vant/es')['ActionSheet']

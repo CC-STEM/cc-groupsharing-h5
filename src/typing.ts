@@ -20,7 +20,11 @@ export interface Avatar {
 }
 
 export interface PlayItem {
-  imgUrl: string;
-  title: string;
-  subTitle?: string;
+  imgUrl: string
+  title: string
+  subTitle?: string
+}
+
+export enum ORDER_STATUS_CN_MAP {
+  COMPLETED = '',
 }

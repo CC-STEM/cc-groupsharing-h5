@@ -3,13 +3,19 @@ import type { PlayItem } from '@/typing'
 
 const props = defineProps<PlayItem>()
 </script>
+
 <template>
   <div class="playBox">
     <img class="logo" :src="props.imgUrl" alt="">
-    <div class="title">{{ props.title }}</div>
-    <div class="subTitle">{{ props.subTitle }}</div>
+    <div class="title">
+      {{ props.title }}
+    </div>
+    <div class="subTitle">
+      {{ props.subTitle }}
+    </div>
   </div>
 </template>
+
 <style lang="less" scoped>
 .playBox {
   width: auto;
