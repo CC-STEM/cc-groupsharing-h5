@@ -34,17 +34,33 @@ export interface OrderInfo {
 export enum ORDER_STATUS_ENUM {
   COMPLETED = 'COMPLETED',
   UNCOMPLETED = 'UNCOMPLETED',
-  INVALID = 'INVALID'
+  INVALID = 'INVALID',
 }
 
 export const ORDER_STATUS_CN_MAP = {
   [ORDER_STATUS_ENUM.COMPLETED]: '已拼成',
   [ORDER_STATUS_ENUM.UNCOMPLETED]: '未拼成',
-  [ORDER_STATUS_ENUM.INVALID]: '已失效'
+  [ORDER_STATUS_ENUM.INVALID]: '已失效',
 }
 
 export const ORDER_OP_TEXT = {
   [ORDER_STATUS_ENUM.COMPLETED]: '去使用',
   [ORDER_STATUS_ENUM.UNCOMPLETED]: '邀请好友',
-  [ORDER_STATUS_ENUM.INVALID]: '删除订单'
+  [ORDER_STATUS_ENUM.INVALID]: '删除订单',
+}
+
+export const ORDER_OP_TEXT_COLOR = {
+  [ORDER_STATUS_ENUM.COMPLETED]: '#151515',
+  [ORDER_STATUS_ENUM.UNCOMPLETED]: '#F54A11',
+  [ORDER_STATUS_ENUM.INVALID]: '#1E1E1E',
+}
+
+export interface StudentInfoType {
+  name: string
+  school: string
+  birthdate: string
+  phone: string
+  classTime: string
+  howKnow: string
+  hasStudiedCoding: boolean
 }

@@ -104,6 +104,15 @@ onMounted(() => {
   console.log('scroll', -(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth))
   scrollIns.scrollTo(-(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth) / 2, 0)
 })
+
+// 发起拼团
+function handleCreateGroup() {
+  router.push('/StudentInfo')
+}
+// 参团
+function handleJoinGroup() {
+  router.push('/StudentInfo')
+}
 </script>
 
 <template>
@@ -152,7 +161,7 @@ onMounted(() => {
               单独购买
             </div>
           </div>
-          <div class="createGroupBtn">
+          <div class="createGroupBtn" @click="handleCreateGroup">
             <div class="price">
               ￥55.00
             </div>
@@ -160,7 +169,7 @@ onMounted(() => {
               发起拼团
             </div>
           </div>
-          <div v-if="false" class="joinGroupBtn">
+          <div v-if="false" class="joinGroupBtn" @click="handleJoinGroup">
             <div class="desc">
               立即参团
             </div>

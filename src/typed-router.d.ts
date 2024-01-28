@@ -44,6 +44,7 @@ declare module 'vue-router/auto/routes' {
     '/GroupSharingHome': RouteRecordInfo<'/GroupSharingHome', '/GroupSharingHome', Record<never, never>, Record<never, never>>,
     '/mock/': RouteRecordInfo<'/mock/', '/mock', Record<never, never>, Record<never, never>>,
     '/Order': RouteRecordInfo<'/Order', '/Order', Record<never, never>, Record<never, never>>,
+    '/StudentInfo': RouteRecordInfo<'/StudentInfo', '/StudentInfo', Record<never, never>, Record<never, never>>,
     '/unocss/': RouteRecordInfo<'/unocss/', '/unocss', Record<never, never>, Record<never, never>>,
   }
 }
