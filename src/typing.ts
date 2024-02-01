@@ -64,3 +64,33 @@ export interface StudentInfoType {
   howKnow: string
   hasStudiedCoding: boolean
 }
+
+interface BaseResponse {
+  code: number
+  msg: string
+}
+
+export interface GetOpenIdReq {
+  code: string
+}
+
+export type GetOpenIdRes = BaseResponse & {
+  openId: string
+}
+
+export type getAuthConfigRes = BaseResponse & {
+  timestamp: string
+  nonceStr: string
+  signature: string
+}
+
+export interface PrepayReq {
+  openId: string
+}
+
+export type PrepayRes = BaseResponse & {
+  timestamp: string // 支付签名时间戳
+  nonceStr: string // 支付签名随机串
+  prepayID: string // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+  paySign: string // 支付签名
+}

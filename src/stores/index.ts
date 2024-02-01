@@ -8,3 +8,16 @@ export const useStore = defineStore({
     mode: '',
   }),
 })
+
+export const useWXStateStore = defineStore('wxState', {
+  state: () => {
+    return {
+      openId: '',
+    }
+  },
+  actions: {
+    setOpenId(openId: string) {
+      this.openId = openId
+    },
+  },
+})
