@@ -65,7 +65,7 @@ export interface StudentInfoType {
   hasStudiedCoding: boolean
 }
 
-interface BaseResponse {
+export interface BaseResponse {
   code: number
   msg: string
 }
@@ -93,4 +93,18 @@ export type PrepayRes = BaseResponse & {
   nonceStr: string // 支付签名随机串
   prepayID: string // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
   paySign: string // 支付签名
+}
+
+export interface User {
+  phone: string
+  accessToken: string
+}
+
+export interface PhoneLoginReq {
+  code: string
+  phone: string
+}
+
+export type PhoneLoginRes = BaseResponse & {
+  data: User
 }

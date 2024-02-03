@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { GetOpenIdReq, GetOpenIdRes, PrepayReq, PrepayRes, getAuthConfigRes } from '@/typing'
+import type { BaseResponse, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -49,5 +49,21 @@ export function wxPrepay(params: PrepayReq) {
     method: 'GET',
     url: `/public/wxPort/prepay`,
     params,
+  })
+}
+
+// 获取验证码
+export function getSMSCode(phone: string) {
+  return axiosIns<BaseResponse>({
+    method: 'GET',
+    url: `/api/msm/send/${phone}`,
+  })
+}
+
+export function loginByPhone(data: PhoneLoginReq) {
+  return axiosIns<PhoneLoginRes>({
+    method: 'POST',
+    url: `/api/user/login`,
+    data,
   })
 }

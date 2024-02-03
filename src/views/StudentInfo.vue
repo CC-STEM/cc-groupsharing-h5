@@ -51,7 +51,7 @@ function getWxAuth() {
     // 微信授权，授权后重定向到本页面
     const localUrl = window.location.href
     console.log(localUrl)
-    window.location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${wxAppID}&redirect_uri=${localUrl}&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect`
+    window.location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${wxAppID}&redirect_uri=${localUrl}&response_type=code&scope=snsapi_base&state=STATE&connect_redirect=1#wechat_redirect`
   }
   else {
     // 如果已经授权，获取code参数，通过后端获取openID，返回前端，保存本地缓存
