@@ -41,12 +41,12 @@ function refreshCodeBtn() {
 }
 
 async function handleLogin() {
-  const { data: { data } } = await loginByPhone({
+  const { data: { data, code: resCode } } = await loginByPhone({
     code: code.value,
     phone: phone.value,
   })
   setLoginInfo(data)
-  // console.log('handleLogin', res)
+  console.log('handleLogin', data, resCode)
   router.push('/')
 }
 </script>

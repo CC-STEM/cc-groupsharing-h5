@@ -56,7 +56,7 @@ export function wxPrepay(params: PrepayReq) {
 export function getSMSCode(phone: string) {
   return axiosIns<BaseResponse>({
     method: 'GET',
-    url: `/common/msm/send/${phone}`,
+    url: `/api/msm/send/${phone}`,
   })
 }
 
@@ -65,5 +65,12 @@ export function loginByPhone(data: PhoneLoginReq) {
     method: 'POST',
     url: `/api/app/h5/login`,
     data,
+  })
+}
+
+export function getGroupSharingData() {
+  return axiosIns<BaseResponse>({
+    method: 'GET',
+    url: `/api/app/h5/listGroupBuying`,
   })
 }

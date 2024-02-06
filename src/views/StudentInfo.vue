@@ -59,8 +59,11 @@ function getWxAuth() {
       .then((res: any) => {
         console.log('getWxOpenId', res)
         // openID保存本地
+        wxStateStore.setOpenId('obPGK6JKCgHgBY2xWoadDxZmSGpo')
+
         if (res.status.code === 1) {
-          wxStateStore.setOpenId(res.data.openID)
+          // wxStateStore.setOpenId(res.data.openID)
+          // 测试openId obPGK6JKCgHgBY2xWoadDxZmSGpo
           console.log(`---授权成功，openID:${res.data.openID}\n`)
         }
         else {

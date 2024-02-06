@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
 import BScroll from '@better-scroll/core'
 import { useRouter } from 'vue-router'
 import type { Avatar, Card, PlayItem } from '@/typing'
@@ -17,6 +17,7 @@ import play3 from '@/assets/play3.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
+import { getGroupSharingData } from '@/services'
 
 const router = useRouter()
 const shopName = ref('门店名称AAA')
@@ -124,6 +125,11 @@ function handleJoinGroup() {
 //     jsApiList: ['checkJsApi', 'updateAppMessageShareData'] // 必填，需要使用的JS接口列表
 //   });
 // }
+
+watchEffect(async () => {
+  const res = await getGroupSharingData()
+  console.log('res', res)
+})
 </script>
 
 <template>

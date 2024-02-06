@@ -109,3 +109,25 @@ export interface PhoneLoginReq {
 export type PhoneLoginRes = BaseResponse & {
   data: User
 }
+
+export interface GroupSharingInfo {
+  deadline: number
+  details: string
+  endTime: string
+  groupBuyingPrice: number
+  id: string
+  lessonNumber: number
+  number: number
+  price: number
+  rules: string
+  shareImgUrl: string
+  shareSubTitle: string
+  shareTitle: string
+  startTime: string
+  storeName: string
+  vipName: string
+}
+
+export type GetGroupSharingDataRes = BaseResponse & {
+  data: GroupSharingInfo
+}

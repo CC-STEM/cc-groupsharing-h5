@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getLoginInfo } from '@/utils'
 
 export const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL
 export const LOGIN_PAHT = '/login'
@@ -10,12 +11,12 @@ const axiosInstance = axios.create({
 })
 
 axiosInstance.interceptors.request.use((config) => {
-  // const userLoginInfo = getLoginInfo()
-  // console.log('userLoginInfo', userLoginInfo)
-  // if (userLoginInfo?.token) {
-  //   config.headers['Authorization'] = 'Bearer ' + userLoginInfo.token
-  // }
-  // console.log('new config', config)
+  const userLoginInfo = getLoginInfo()
+  console.log('userLoginInfo', userLoginInfo)
+  if (userLoginInfo?.token)
+    config.headers.Authorization = `Bearer ${userLoginInfo.token}`
+
+  console.log('new config', config)
   return config
 })
 
