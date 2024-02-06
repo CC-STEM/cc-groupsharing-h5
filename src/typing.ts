@@ -97,7 +97,8 @@ export type PrepayRes = BaseResponse & {
 
 export interface User {
   phone: string
-  accessToken: string
+  token: string
+  name: string
 }
 
 export interface PhoneLoginReq {

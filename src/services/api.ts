@@ -30,7 +30,7 @@ export function tranformQueryInfoToString<T>(queryInfo: T) {
 export function getWxOpenId(params: GetOpenIdReq) {
   return axiosIns<GetOpenIdRes>({
     method: 'GET',
-    url: `/public/wxPort/getWxOpenId`,
+    url: `/api/user/wechat/userInfo`,
     params,
   })
 }
@@ -56,14 +56,14 @@ export function wxPrepay(params: PrepayReq) {
 export function getSMSCode(phone: string) {
   return axiosIns<BaseResponse>({
     method: 'GET',
-    url: `/api/msm/send/${phone}`,
+    url: `/common/msm/send/${phone}`,
   })
 }
 
 export function loginByPhone(data: PhoneLoginReq) {
   return axiosIns<PhoneLoginRes>({
     method: 'POST',
-    url: `/api/user/login`,
+    url: `/api/app/h5/login`,
     data,
   })
 }

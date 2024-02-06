@@ -57,6 +57,7 @@ function getWxAuth() {
     // 如果已经授权，获取code参数，通过后端获取openID，返回前端，保存本地缓存
     getWxOpenId({ code })
       .then((res: any) => {
+        console.log('getWxOpenId', res)
         // openID保存本地
         if (res.status.code === 1) {
           wxStateStore.setOpenId(res.data.openID)

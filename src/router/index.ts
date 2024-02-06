@@ -21,7 +21,7 @@ router.beforeEach((_to, _from, next) => {
     return
   }
 
-  if (loginInfo?.accessToken)
+  if (loginInfo?.token)
     next()
   else
     next('/PhoneLogin')
