@@ -79,7 +79,10 @@ function getWxAuth() {
 // 初始化wx JSSDK
 function initWxConfig() {
   // 后端获取access_token和ticket，返回签名信息，初始化wx.config
-  getInitSDKAuthConfig().then((res: any) => {
+  console.log('location')
+  getInitSDKAuthConfig({
+    url: document.URL,
+  }).then((res: any) => {
     console.log('getInitSDKAuthConfig', res)
     if (res.status.code === 1) {
       console.log(`---获取 ticket成功，返回结果:${JSON.stringify(res.data)}\n`)

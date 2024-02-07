@@ -78,6 +78,10 @@ export type GetOpenIdRes = BaseResponse & {
   openId: string
 }
 
+export interface getAuthConfigReq {
+  url?: string
+}
+
 export type getAuthConfigRes = BaseResponse & {
   timestamp: string
   nonceStr: string

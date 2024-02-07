@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigRes } from '@/typing'
+import type { BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -36,10 +36,11 @@ export function getWxOpenId(params: GetOpenIdReq) {
 }
 
 // 获取初始化jssdk 所用签名信息
-export function getInitSDKAuthConfig() {
+export function getInitSDKAuthConfig(data: getAuthConfigReq) {
   return axiosIns<getAuthConfigRes>({
     method: 'GET',
     url: `/api/user/wechat/signature`,
+    params: data,
   })
 }
 
