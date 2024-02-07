@@ -26,7 +26,7 @@ export interface PlayItem {
 }
 
 export interface OrderInfo {
-  card: Card
+  card: GroupSharingCardInfo
   avatarList: Avatar[]
   orderStatus: ORDER_STATUS_ENUM
 }

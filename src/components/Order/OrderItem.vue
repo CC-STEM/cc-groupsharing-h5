@@ -19,11 +19,7 @@ const orderTextColor = computed(() => ORDER_OP_TEXT_COLOR[props.orderStatus])
 
 <template>
   <div class="orderItemContainer">
-    <GroupSharingCard
-      class="orderSharingCard" :is-active-style="curCard.isActiveStyle" :course-num="curCard.courseNum"
-      :end-time="curCard.endTime" :width="curCard.width" :name="curCard.name" :detail="curCard.detail"
-      :part-num="curCard.partNum" :price="curCard.price" @detail-click="curEmits('detailClick')"
-    />
+    <GroupSharingCard class="orderSharingCard" :card-info="props.card" @detail-click="curEmits('detailClick')" />
     <div class="opBox">
       <div class="opAvatar">
         <JoinGroupAvatarList :avatar-list="avatarList" :is-support-add="false" />
