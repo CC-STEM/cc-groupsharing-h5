@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watchEffect } from 'vue'
 import type { OrderInfo } from '@/typing'
 import { ORDER_STATUS_ENUM } from '@/typing'
 import Avatar1 from '@/assets/pic1.jpg'
@@ -8,6 +8,7 @@ import Avatar3 from '@/assets/pic5.jpg'
 
 import OrderItem from '@/components/Order/OrderItem.vue'
 import PageView from '@/components/PageView.vue'
+import { getMyGroupSharingList } from '@/services'
 
 const orderList = ref<OrderInfo[]>([{
   card: {
@@ -55,6 +56,11 @@ const orderList = ref<OrderInfo[]>([{
   }],
   orderStatus: ORDER_STATUS_ENUM.INVALID,
 }])
+
+watchEffect(async () => {
+  const res = await getMyGroupSharingList()
+  console.log('getMyGroupSharingList', res)
+})
 </script>
 
 <template>

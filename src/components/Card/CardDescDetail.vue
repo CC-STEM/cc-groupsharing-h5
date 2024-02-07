@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Card } from '@/typing'
+import type { GroupSharingCardInfo } from '@/typing'
 
 interface Props {
   showOption: { show: boolean }
-  curSelectedCard: Card
+  curSelectedCard: GroupSharingCardInfo
 }
 const props = defineProps<Props>()
 const { showOption: cardShowOption } = toRefs(props)
@@ -15,17 +15,12 @@ const curCard = computed(() => props.curSelectedCard)
 <template>
   <van-action-sheet v-model:show="cardShowOption.show" title="详情说明" cancel-text="我知道了">
     <!-- <div class="sheetContent">内容</div> -->
-    <GroupSharingCard
-      :is-active-style="curCard.isActiveStyle" :course-num="curCard.courseNum" :end-time="curCard.endTime"
-      :width="curCard.width" :name="curCard.name" :detail="curCard.detail" :part-num="curCard.partNum"
-      :price="curCard.price"
-    />
+    <GroupSharingCard :card-info="curCard" />
     <div class="detailTitle">
-      仅限于XX课程，仅限于XX门店使用
+      仅限于通用课程，仅限于{{ curCard.storeName }}门店使用
     </div>
     <div class="detailDesc">
-      文案说明文案说明文案说明文案说明文案说明文案
-      文案说明文案说明说明
+      {{ curCard.details }}
     </div>
   </van-action-sheet>
 </template>

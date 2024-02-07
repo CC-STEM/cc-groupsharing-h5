@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
+import { nextTick, onMounted, ref, watchEffect } from 'vue'
 import BScroll from '@better-scroll/core'
-import { useRouter } from 'vue-router'
-import type { Avatar, Card, PlayItem } from '@/typing'
+import { useRoute, useRouter } from 'vue-router'
+import type { Avatar, GroupSharingCardInfo, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
@@ -17,41 +17,69 @@ import play3 from '@/assets/play3.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
-import { getGroupSharingData } from '@/services'
+import { getGroupSharingData, getSharedGroupData } from '@/services'
 
 const router = useRouter()
-const shopName = ref('门店名称AAA')
+const route = useRoute()
+const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
-const cardList = ref<Card[]>([{
-  isActiveStyle: true,
-  name: '会员卡名称',
-  endTime: '2023.4.20 15:00 截止',
-  price: 55.00,
-  partNum: 2,
-  courseNum: 20,
-  detail: '详细说明',
-  width: 618,
-}, {
-  isActiveStyle: true,
-  name: '会员卡名称',
-  endTime: '2023.4.20 15:00 截止',
-  price: 55.00,
-  partNum: 2,
-  courseNum: 20,
-  detail: '详细说明',
-  width: 618,
-}, {
-  isActiveStyle: true,
-  name: '会员卡名称',
-  endTime: '2023.4.20 15:00 截止',
-  price: 55.00,
-  partNum: 2,
-  courseNum: 20,
-  detail: '详细说明',
-  width: 618,
-}])
+const cardList = ref<GroupSharingCardInfo[]>([
+  // {
+  //   "id": 1706177382872472,
+  //   "storeName": "",
+  //   "vipName": "会员卡1111",
+  //   "startTime": "2024-01-22",
+  //   "endTime": "2024-01-25",
+  //   "price": 500.00,
+  //   "groupBuyingPrice": 420.00,
+  //   "deadline": 30,
+  //   "number": 2,
+  //   "lessonNumber": 4,
+  //   "details": "详情说明详情说明详情说明详情说明详情说明详情说明",
+  //   "shareTitle": "主标题文案",
+  //   "shareSubTitle": "副标题文案",
+  //   "shareImgUrl": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-01-25/20240125180919_22022312542M617_0_lp.jpg",
+  //   "rules": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-02-02/20240202171159_微信图片_20240202171056.jpg"
+  // },
+  // {
+  //   "id": 1706232500710665,
+  //   "storeName": "",
+  //   "vipName": "新年有礼拼团",
+  //   "startTime": "2024-01-26",
+  //   "endTime": "2024-01-26",
+  //   "price": 888.00,
+  //   "groupBuyingPrice": 8.00,
+  //   "deadline": 30,
+  //   "number": 2,
+  //   "lessonNumber": 2,
+  //   "details": "活动仅限武汉地区门店进行",
+  //   "shareTitle": "跟我一起加入CC编程吧 ",
+  //   "shareSubTitle": "做科技少年",
+  //   "shareImgUrl": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-01-26/20240126092708_IMG_5724.JPG",
+  //   "rules": "<p>1.会员只能当<u>团长</u>，不可当团员； </p><p>2.有效期</p><p>3.最多一人可参加..</p><p><br></p>"
+  // },
+  // {
+  //   "id": 1706232500710665,
+  //   "storeName": "",
+  //   "vipName": "新年有礼拼团",
+  //   "startTime": "2024-01-26",
+  //   "endTime": "2024-01-26",
+  //   "price": 888.00,
+  //   "groupBuyingPrice": 8.00,
+  //   "deadline": 30,
+  //   "number": 2,
+  //   "lessonNumber": 2,
+  //   "details": "活动仅限武汉地区门店进行",
+  //   "shareTitle": "跟我一起加入CC编程吧 ",
+  //   "shareSubTitle": "做科技少年",
+  //   "shareImgUrl": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-01-26/20240126092708_IMG_5724.JPG",
+  //   "rules": "<p>1.会员只能当<u>团长</u>，不可当团员； </p><p>2.有效期</p><p>3.最多一人可参加..</p><p><br></p>"
+  // }
+])
 
-const curSelectedCard = ref<Card | null>(null)
+const curSharedGroupInfo = ref()
+
+const curSelectedCard = ref<GroupSharingCardInfo | null>(null)
 
 const avatarList = ref<Avatar[]>([{
   url: Avatar1,
@@ -80,14 +108,17 @@ const playList: PlayItem[] = [{
   subTitle: '',
 }]
 
-function clickDetail(curCard: Card) {
+function clickDetail(curCard: GroupSharingCardInfo) {
   console.log('click---')
   showCardDetailSheetOption.value = { show: true }
   curSelectedCard.value = curCard
 }
 
+let scrollIns
+
 onMounted(() => {
-  const scrollIns = new BScroll(scrollRef.value, {
+  console.log('scrollRef.value', scrollRef.value)
+  scrollIns = new BScroll(scrollRef.value, {
     probeType: 3,
     scrollX: true,
     click: true,
@@ -127,8 +158,28 @@ function handleJoinGroup() {
 // }
 
 watchEffect(async () => {
-  const res = await getGroupSharingData()
-  console.log('res', res)
+  const query = route.query
+  console.log('routeParams', query)
+  if (query.activityId) {
+    const res = await getSharedGroupData(query.activityId as string)
+    console.log('getSharedGroupData', res)
+  }
+  else {
+    const { data: { data } } = await getGroupSharingData()
+    console.log('getGroupSharingData', data)
+    cardList.value = data.map(item => ({
+      ...item,
+      isActiveStyle: true,
+      width: 618,
+    }))
+    if (cardList.value.length)
+      shopName.value = cardList.value[0].storeName
+
+    nextTick(() => {
+      if (scrollIns)
+        scrollIns.refresh()
+    })
+  }
 })
 </script>
 
@@ -147,9 +198,7 @@ watchEffect(async () => {
       <div ref="scrollRef" class="cardContainer">
         <div class="subContainer">
           <GroupSharingCard
-            v-for="(item, index) in cardList" :key="index" class="sharingCard"
-            :is-active-style="item.isActiveStyle" :course-num="item.courseNum" :end-time="item.endTime"
-            :width="item.width" :name="item.name" :detail="item.detail" :part-num="item.partNum" :price="item.price"
+            v-for="(item, index) in cardList" :key="index" class="sharingCard" :card-info="item"
             @detail-click="clickDetail(item)"
           />
         </div>
@@ -163,7 +212,7 @@ watchEffect(async () => {
         <div class="firstTitle">
           参与拼团
         </div>
-        <div class="secondTitle">
+        <div v-if="curSharedGroupInfo" class="secondTitle">
           王梓峰 邀请您来参与拼团啦!
         </div>
       </div>

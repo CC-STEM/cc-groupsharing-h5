@@ -1,38 +1,38 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Card } from '@/typing'
+import type { GroupSharingCardInfo } from '@/typing'
 import ValidCardBackImg from '@/assets/validCard.png'
 import InValidCardBackImg from '@/assets/invalidCard.png'
 import { px2vw } from '@/utils/calcStyle'
 
-const props = defineProps<Card>()
+const props = defineProps<{ cardInfo: GroupSharingCardInfo }>()
 const curEmit = defineEmits(['detailClick'])
-const realWidth = computed(() => px2vw(props.width || 656))
-const realHeight = computed(() => px2vw(props.height || 285))
-const backImgUrl = computed(() => props.isActiveStyle ? `url(${ValidCardBackImg})` : `url(${InValidCardBackImg})`)
+const realWidth = computed(() => px2vw(props.cardInfo?.width || 656))
+const realHeight = computed(() => px2vw(props.cardInfo?.height || 285))
+const backImgUrl = computed(() => props.cardInfo?.isActiveStyle ? `url(${ValidCardBackImg})` : `url(${InValidCardBackImg})`)
 </script>
 
 <template>
   <div class="cardBox">
     <div class="cardName">
       <div class="name">
-        会员卡名称
+        {{ props.cardInfo?.vipName }}
       </div>
       <div class="endTime">
-        2023.04.20 15:00截止
+        {{ props.cardInfo?.endTime }} 截止
       </div>
     </div>
     <div class="cardAmount">
       <div class="price">
-        ￥ 55.00
+        ￥ {{ props.cardInfo?.price }}
       </div>
       <div class="joinNum">
-        2人拼
+        {{ props.cardInfo?.number }}人拼
       </div>
     </div>
     <div class="course">
       <div class="num">
-        常规课 20 次
+        常规课 {{ props.cardInfo?.lessonNumber }} 次
       </div>
       <div class="desc" @click="() => curEmit('detailClick')">
         详情说明

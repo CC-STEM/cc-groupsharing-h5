@@ -6,7 +6,6 @@ import 'nprogress/nprogress.css'
 import { getLoginInfo } from '@/utils/index'
 
 const LOGIN_PATH = '/PhoneLogin'
-const HOME_PATH = '/'
 
 NProgress.configure({ showSpinner: true, parent: '#app' })
 const router = createRouter({
@@ -16,7 +15,7 @@ const router = createRouter({
 router.beforeEach((_to, _from, next) => {
   NProgress.start() // start progress bar
   const loginInfo = getLoginInfo()
-  if (_to.path === LOGIN_PATH || _to.path === HOME_PATH) {
+  if (_to.path === LOGIN_PATH) {
     next()
     return
   }

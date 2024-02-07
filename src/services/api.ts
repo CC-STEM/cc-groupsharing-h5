@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { BaseResponse, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigRes } from '@/typing'
+import type { BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -39,7 +39,7 @@ export function getWxOpenId(params: GetOpenIdReq) {
 export function getInitSDKAuthConfig() {
   return axiosIns<getAuthConfigRes>({
     method: 'GET',
-    url: `/public/wxPort/getTicket`,
+    url: `/api/user/wechat/signature`,
   })
 }
 
@@ -69,8 +69,22 @@ export function loginByPhone(data: PhoneLoginReq) {
 }
 
 export function getGroupSharingData() {
-  return axiosIns<BaseResponse>({
+  return axiosIns<GetGroupSharingDataRes>({
     method: 'GET',
     url: `/api/app/h5/listGroupBuying`,
+  })
+}
+
+export function getSharedGroupData(groupActivityId: string) {
+  return axiosIns<BaseResponse>({
+    method: 'GET',
+    url: `/api/app/h5/myGroupBuyingOrder/${groupActivityId}`,
+  })
+}
+
+export function getMyGroupSharingList() {
+  return axiosIns<BaseResponse>({
+    method: 'GET',
+    url: `/api/app/h5/listGroupBuyingOrder`,
   })
 }

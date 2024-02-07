@@ -80,6 +80,7 @@ function getWxAuth() {
 function initWxConfig() {
   // 后端获取access_token和ticket，返回签名信息，初始化wx.config
   getInitSDKAuthConfig().then((res: any) => {
+    console.log('getInitSDKAuthConfig', res)
     if (res.status.code === 1) {
       console.log(`---获取 ticket成功，返回结果:${JSON.stringify(res.data)}\n`)
 
@@ -91,7 +92,7 @@ function initWxConfig() {
         timestamp: res.data.timestamp, // 必填，生成签名的时间戳
         nonceStr: res.data.nonceStr, // 必填，生成签名的随机串
         signature: res.data.signature, // 必填，签名
-        jsApiList: ['chooseWXPay'], // 必填，需要使用的JS接口列表
+        jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 必填，需要使用的JS接口列表
       })
 
       // 通过ready接口处理成功验证
