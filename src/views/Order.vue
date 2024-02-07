@@ -12,7 +12,7 @@ import { getMyGroupSharingList } from '@/services'
 
 const orderList = ref<OrderInfo[]>([{
   card: {
-    id: 1706177382872472,
+    id: '1706177382872472',
     storeName: '',
     vipName: '会员卡1111',
     startTime: '2024-01-22',
@@ -34,7 +34,7 @@ const orderList = ref<OrderInfo[]>([{
   orderStatus: ORDER_STATUS_ENUM.UNCOMPLETED,
 }, {
   card: {
-    id: 1706177382872472,
+    id: '1706177382872472',
     storeName: '',
     vipName: '会员卡1111',
     startTime: '2024-01-22',
@@ -56,7 +56,7 @@ const orderList = ref<OrderInfo[]>([{
   orderStatus: ORDER_STATUS_ENUM.COMPLETED,
 }, {
   card: {
-    id: 1706177382872472,
+    id: '1706177382872472',
     storeName: '',
     vipName: '会员卡1111',
     startTime: '2024-01-22',
