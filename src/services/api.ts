@@ -45,11 +45,11 @@ export function getInitSDKAuthConfig(data: getAuthConfigReq) {
 }
 
 // 下单
-export function wxPrepay(params: PrepayReq) {
+export function wxPrepay(data: PrepayReq) {
   return axiosIns<PrepayRes>({
-    method: 'GET',
-    url: `/public/wxPort/prepay`,
-    params,
+    method: 'POST',
+    url: `/api/user/wechat/prepay`,
+    data,
   })
 }
 

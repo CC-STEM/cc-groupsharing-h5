@@ -129,8 +129,9 @@ function initWxConfig() {
 // 支付
 function handlePay() {
   // 先是后端用户下单，下完单之后，前端再调取微信支付
-  wxPrepay({ openId: wxStateStore.openId })
+  wxPrepay({ openId: wxStateStore.openId, payAmount: 1, payDesc: '测试支付' })
     .then((res: any) => {
+      console.log('wxPrepay', res)
       if (res.status.code === 1) {
         console.log(`---统一下单成功，返回结果:${JSON.stringify(res.data)}\n`)
         wx.chooseWXPay({
