@@ -56,15 +56,15 @@ function getWxAuth() {
   else {
     // 如果已经授权，获取code参数，通过后端获取openID，返回前端，保存本地缓存
     getWxOpenId({ code })
-      .then((res: any) => {
+      .then((res) => {
         console.log('getWxOpenId', res)
+        const { data: { code, data } } = res
         // openID保存本地
         wxStateStore.setOpenId('obPGK6JKCgHgBY2xWoadDxZmSGpo')
-
-        if (res.status.code === 1) {
+        if (code === 200) {
           // wxStateStore.setOpenId(res.data.openID)
           // 测试openId obPGK6JKCgHgBY2xWoadDxZmSGpo
-          console.log(`---授权成功，openID:${res.data.openID}\n`)
+          console.log(`---授权成功，openID:${data}\n`)
         }
         else {
           // 抛出错误
@@ -82,19 +82,20 @@ function initWxConfig() {
   console.log('location')
   getInitSDKAuthConfig({
     url: document.URL,
-  }).then((res: any) => {
+  }).then((res) => {
     console.log('getInitSDKAuthConfig', res)
-    if (res.status.code === 1) {
-      console.log(`---获取 ticket成功，返回结果:${JSON.stringify(res.data)}\n`)
+    const { data: { code, data } } = res
+    if (code === 200) {
+      console.log(`---获取 ticket成功，返回结果:${JSON.stringify(data)}\n`)
 
       // 官方参考文档：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#1
       // 初始化验证jssdk
       wx.config({
         debug: true, // 这里一般在测试阶段先用ture，等打包给后台的时候就改回false,
         appId: wxAppID, // 必填，公众号的唯一标识
-        timestamp: res.data.timestamp, // 必填，生成签名的时间戳
-        nonceStr: res.data.nonceStr, // 必填，生成签名的随机串
-        signature: res.data.signature, // 必填，签名
+        timestamp: data.timestamp, // 必填，生成签名的时间戳
+        nonceStr: data.nonceStr, // 必填，生成签名的随机串
+        signature: data.signature, // 必填，签名
         jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 必填，需要使用的JS接口列表
       })
 

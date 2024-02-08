@@ -75,7 +75,7 @@ export interface GetOpenIdReq {
 }
 
 export type GetOpenIdRes = BaseResponse & {
-  openId: string
+  data: string
 }
 
 export interface getAuthConfigReq {
@@ -83,9 +83,11 @@ export interface getAuthConfigReq {
 }
 
 export type getAuthConfigRes = BaseResponse & {
-  timestamp: string
-  nonceStr: string
-  signature: string
+  data: {
+    timestamp: string
+    nonceStr: string
+    signature: string
+  }
 }
 
 export interface PrepayReq {
@@ -93,10 +95,12 @@ export interface PrepayReq {
 }
 
 export type PrepayRes = BaseResponse & {
-  timestamp: string // 支付签名时间戳
-  nonceStr: string // 支付签名随机串
-  prepayID: string // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
-  paySign: string // 支付签名
+  data: {
+    timestamp: string // 支付签名时间戳
+    nonceStr: string // 支付签名随机串
+    prepayID: string // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+    paySign: string // 支付签名
+  }
 }
 
 export interface User {
