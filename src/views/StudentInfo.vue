@@ -93,7 +93,7 @@ function initWxConfig() {
       wx.config({
         debug: true, // 这里一般在测试阶段先用ture，等打包给后台的时候就改回false,
         appId: wxAppID, // 必填，公众号的唯一标识
-        timestamp: data.timestamp, // 必填，生成签名的时间戳
+        timestamp: Number(data.timestamp), // 必填，生成签名的时间戳
         nonceStr: data.nonceStr, // 必填，生成签名的随机串
         signature: data.signature, // 必填，签名
         jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 必填，需要使用的JS接口列表
