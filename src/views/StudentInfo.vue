@@ -103,7 +103,7 @@ function initWxConfig() {
       wx.ready(() => {
         console.log(`---初始化wx.config成功\n`)
         wx.checkJsApi({
-          jsApiList: ['chooseWXPay'], // 需要检测的JS接口列表，所有JS接口列表见附录2,
+          jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 需要检测的JS接口列表，所有JS接口列表见附录2,
           success: (res: any) => {
             // 以键值对的形式返回，可用的api值true，不可用为false
             // 如：{"checkResult":{"chooseWXPay":true},"errMsg":"checkJsApi:ok"}
