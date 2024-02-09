@@ -200,16 +200,17 @@ async function handlePay() {
 
   // 先是后端用户下单，下完单之后，前端再调取微信支付
   wxPrepay({ openId: wxStateStore.openId, payAmount: 1, payDes: '测试支付' })
-    .then((res: any) => {
+    .then((res) => {
       console.log('wxPrepay', res)
-      if (res.status.code === 1) {
-        console.log(`---统一下单成功，返回结果:${JSON.stringify(res.data)}\n`)
+      const { data: { code, data } } = res
+      if (code === 200) {
+        console.log(`---统一下单成功，返回结果:${JSON.stringify(data)}\n`)
         wx.chooseWXPay({
-          timestamp: res.data.timestamp, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
-          nonceStr: res.data.nonceStr, // 支付签名随机串，不长于 32 位
-          package: `prepay_id=${res.data.prepayID}`, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
-          signType: 'RSA', // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
-          paySign: res.data.paySign, // 支付签名
+          timestamp: Number(data.timeStamp), // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+          nonceStr: data.nonceStr, // 支付签名随机串，不长于 32 位
+          package: data.packageVal, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+          signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
+          paySign: data.paySign, // 支付签名
           success(res: any) {
             console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
           },

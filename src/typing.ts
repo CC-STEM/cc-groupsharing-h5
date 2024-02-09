@@ -108,10 +108,13 @@ export interface AddStudentInfoReq {
 
 export type PrepayRes = BaseResponse & {
   data: {
-    timestamp: string // 支付签名时间戳
+    timeStamp: string // 支付签名时间戳
     nonceStr: string // 支付签名随机串
-    prepayID: string // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+    // prepayID: string // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
     paySign: string // 支付签名
+    signType: string // 签名算法
+    packageVal: string // prepay_id=***
+    appId: string
   }
 }
 
