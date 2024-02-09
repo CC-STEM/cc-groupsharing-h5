@@ -93,7 +93,7 @@ export type getAuthConfigRes = BaseResponse & {
 export interface PrepayReq {
   openId: string
   payAmount: number
-  payDesc?: string
+  payDes?: string
 }
 
 export interface AddStudentInfoReq {

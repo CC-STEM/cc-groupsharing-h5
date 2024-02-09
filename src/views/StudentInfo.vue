@@ -199,7 +199,7 @@ async function handlePay() {
   }
 
   // 先是后端用户下单，下完单之后，前端再调取微信支付
-  wxPrepay({ openId: wxStateStore.openId, payAmount: 1, payDesc: '测试支付' })
+  wxPrepay({ openId: wxStateStore.openId, payAmount: 1, payDes: '测试支付' })
     .then((res: any) => {
       console.log('wxPrepay', res)
       if (res.status.code === 1) {
