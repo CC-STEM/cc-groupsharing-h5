@@ -56,13 +56,13 @@ export const ORDER_OP_TEXT_COLOR = {
 }
 
 export interface StudentInfoType {
-  name: string
+  childrenName: string
   school: string
-  birthdate: string
-  phone: string
-  classTime: string
-  howKnow: string
-  hasStudiedCoding: boolean
+  birth: string
+  contact: string
+  classTime: number
+  isLearnedCode: number
+  isKnowedCc: number
 }
 
 export interface BaseResponse {
@@ -94,6 +94,16 @@ export interface PrepayReq {
   openId: string
   payAmount: number
   payDesc?: string
+}
+
+export interface AddStudentInfoReq {
+  birth: string
+  childrenName: string
+  classTime: number
+  contact: string
+  isKnowedCc: number
+  isLearnedCode: number
+  school: string
 }
 
 export type PrepayRes = BaseResponse & {

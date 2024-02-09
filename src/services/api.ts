@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
+import type { AddStudentInfoReq, BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -87,5 +87,13 @@ export function getMyGroupSharingList() {
   return axiosIns<BaseResponse>({
     method: 'GET',
     url: `/api/app/h5/listGroupBuyingOrder`,
+  })
+}
+
+export function addStudentInfo(data: AddStudentInfoReq) {
+  return axiosIns<BaseResponse>({
+    method: 'POST',
+    url: `/api/app/h5/addMember`,
+    data,
   })
 }

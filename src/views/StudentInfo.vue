@@ -6,20 +6,62 @@ import PageView from '@/components/PageView.vue'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
 import { useWXStateStore } from '@/stores'
-import { getInitSDKAuthConfig, getWxOpenId, wxPrepay } from '@/services/api'
+import { addStudentInfo, getInitSDKAuthConfig, getWxOpenId, wxPrepay } from '@/services/api'
 
 const route = useRoute()
 const studentInfo = ref<StudentInfoType>({
-  name: '',
+  childrenName: '',
   school: '',
-  birthdate: '',
-  phone: '',
-  classTime: '',
-  howKnow: '',
-  hasStudiedCoding: false,
+  birth: '',
+  contact: '',
+  classTime: 0,
+  isKnowedCc: 0,
+  isLearnedCode: 0,
 })
+
+const classTimeResult = ref('')
+const knownedCCResult = ref('')
+const learnedCodingResult = ref('')
 const showBirthdatePicker = ref(false)
 const showClassTimePicker = ref(false)
+const showKnownedCCPicker = ref(false)
+const showLearnedCodingPicker = ref(false)
+
+const expectedClassTimeOptions = [{
+  text: '周中白天',
+  value: 0,
+}, {
+  text: '周中晚上',
+  value: 1,
+}, {
+  text: '周六周日白天',
+  value: 2,
+}, {
+  text: '周六周日晚上',
+  value: 3,
+}]
+
+const HowKnowCCOptions = [{
+  text: '朋友介绍',
+  value: 0,
+}, {
+  text: '自己进店咨询',
+  value: 1,
+}, {
+  text: '户外活动',
+  value: 2,
+}, {
+  text: '其他途径',
+  value: 3,
+}]
+
+const hasLearnedCodingOptions = [{
+  text: '是',
+  value: 0,
+}, {
+  text: '否',
+  value: 1,
+}]
 
 function onSubmit(values) {
   console.log('submit', values)
@@ -29,14 +71,31 @@ function onBirthdateConfirm({ selectedValues, selectedOptions }) {
   showBirthdatePicker.value = false
   console.log('selectedValues', selectedValues)
   console.log('selectedOptions', selectedOptions)
-  studentInfo.value.birthdate = selectedValues.join('-')
+  studentInfo.value.birth = selectedValues.join('-')
 }
 
 function onClassTimeConfirm({ selectedValues, selectedOptions }) {
   showClassTimePicker.value = false
   console.log('selectedValues', selectedValues)
   console.log('selectedOptions', selectedOptions)
-  studentInfo.value.classTime = selectedValues.join('-')
+  classTimeResult.value = selectedOptions[0]?.text
+  studentInfo.value.classTime = selectedValues[0]
+}
+
+function onKnownedCCConfirm({ selectedValues, selectedOptions }) {
+  showKnownedCCPicker.value = false
+  console.log('selectedValues', selectedValues)
+  console.log('selectedOptions', selectedOptions)
+  knownedCCResult.value = selectedOptions[0]?.text
+  studentInfo.value.isKnowedCc = selectedValues[0]
+}
+
+function onLearningCodeConfirm({ selectedValues, selectedOptions }) {
+  showLearnedCodingPicker.value = false
+  console.log('selectedValues', selectedValues)
+  console.log('selectedOptions', selectedOptions)
+  learnedCodingResult.value = selectedOptions[0]?.text
+  studentInfo.value.isLearnedCode = selectedValues[0]
 }
 
 // 微信相关
@@ -127,7 +186,18 @@ function initWxConfig() {
 }
 
 // 支付
-function handlePay() {
+async function handlePay() {
+  // 补充用户信息
+  try {
+    const res = await addStudentInfo({
+      ...studentInfo.value,
+    })
+    console.log('addStudentInfo', res)
+  }
+  catch (e) {
+    console.log('addStudentInfo err', e)
+  }
+
   // 先是后端用户下单，下完单之后，前端再调取微信支付
   wxPrepay({ openId: wxStateStore.openId, payAmount: 1, payDesc: '测试支付' })
     .then((res: any) => {
@@ -186,24 +256,44 @@ initWxConfig()
     </div>
     <van-form @submit="onSubmit">
       <van-cell-group inset>
-        <van-field v-model="studentInfo.name" name="孩子姓名" label="孩子姓名" placeholder="孩子姓名" />
+        <van-field v-model="studentInfo.childrenName" name="孩子姓名" label="孩子姓名" placeholder="孩子姓名" />
         <van-field v-model="studentInfo.school" name="学校名称" label="学校名称" placeholder="学校名称" />
         <van-field
-          v-model="studentInfo.birthdate" is-link readonly label="出生日期" placeholder="出生日期"
+          v-model="studentInfo.birth" is-link readonly label="出生日期" placeholder="出生日期"
           @click="showBirthdatePicker = true"
         />
         <van-popup v-model:show="showBirthdatePicker" round position="bottom">
           <!-- <van-picker :columns="columns" @cancel="showPicker = false" @confirm="onConfirm" /> -->
-          <van-date-picker title="选择日期" @cancel="showBirthdatePicker = false" @confirm="onBirthdateConfirm" />
+          <van-date-picker
+            title="选择日期" :min-date="new Date(1970, 0, 0)" @cancel="showBirthdatePicker = false"
+            @confirm="onBirthdateConfirm"
+          />
         </van-popup>
-        <van-field v-model="studentInfo.phone" name="家长联系方式" label="家长联系方式" placeholder="家长联系方式" />
+        <van-field v-model="studentInfo.contact" name="家长联系方式" label="家长联系方式" placeholder="家长联系方式" />
         <van-field
-          v-model="studentInfo.classTime" is-link readonly label="意向上课时间" placeholder="意向上课时间"
+          v-model="classTimeResult" is-link readonly label="意向上课时间" placeholder="意向上课时间"
           @click="showClassTimePicker = true"
         />
         <van-popup v-model:show="showClassTimePicker" round position="bottom">
-          <!-- <van-picker :columns="columns" @cancel="showPicker = false" @confirm="onConfirm" /> -->
-          <van-time-picker type="time" title="选择时间" @cancel="showClassTimePicker = false" @confirm="onClassTimeConfirm" />
+          <van-picker
+            :columns="expectedClassTimeOptions" @cancel="showClassTimePicker = false"
+            @confirm="onClassTimeConfirm"
+          />
+          <!-- <van-time-picker type="time" title="选择时间" @cancel="showClassTimePicker = false" @confirm="onClassTimeConfirm" /> -->
+        </van-popup>
+        <van-field v-model="knownedCCResult" is-link readonly label="如何知晓CC编程" @click="showKnownedCCPicker = true" />
+        <van-popup v-model:show="showKnownedCCPicker" round position="bottom">
+          <van-picker :columns="HowKnowCCOptions" @cancel="showKnownedCCPicker = false" @confirm="onKnownedCCConfirm" />
+        </van-popup>
+        <van-field
+          v-model="learnedCodingResult" is-link readonly label="是否学过编程"
+          @click="showLearnedCodingPicker = true"
+        />
+        <van-popup v-model:show="showLearnedCodingPicker" round position="bottom">
+          <van-picker
+            :columns="hasLearnedCodingOptions" @cancel="showLearnedCodingPicker = false"
+            @confirm="onLearningCodeConfirm"
+          />
         </van-popup>
       </van-cell-group>
       <van-button round block native-type="submit" color="linear-gradient(179deg, #FFE691, #FF3A05)" @click="handlePay">
@@ -338,5 +428,11 @@ initWxConfig()
 
 :deep(.van-picker__confirm) {
   font-size: 30px !important;
+}
+
+:deep(.van-cell__right-icon) {
+  font-size: 30px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 </style>
