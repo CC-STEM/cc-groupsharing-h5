@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { GroupSharingCardInfo } from '@/typing'
 
 export const useStore = defineStore({
   id: 'index',
@@ -18,6 +19,19 @@ export const useWXStateStore = defineStore('wxState', {
   actions: {
     setOpenId(openId: string) {
       this.openId = openId
+    },
+  },
+})
+
+export const useGroupStateStore = defineStore('groupStore', {
+  state: () => {
+    return {
+      cardInfo: null,
+    }
+  },
+  actions: {
+    setGroupBuyingCardInfo(groupBuyingCardInfo: GroupSharingCardInfo) {
+      this.cardInfo = groupBuyingCardInfo
     },
   },
 })

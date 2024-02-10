@@ -5,8 +5,9 @@ import wx from 'weixin-js-sdk'
 import PageView from '@/components/PageView.vue'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
-import { useWXStateStore } from '@/stores'
-import { addStudentInfo, getInitSDKAuthConfig, getWxOpenId, wxPrepay } from '@/services/api'
+import { useGroupStateStore, useWXStateStore } from '@/stores'
+import { getLoginInfo } from '@/utils/index'
+import { addGroupBuyingOrder, addStudentInfo, getInitSDKAuthConfig, getWxOpenId, wxPrepay } from '@/services/api'
 
 const route = useRoute()
 const studentInfo = ref<StudentInfoType>({
@@ -101,6 +102,7 @@ function onLearningCodeConfirm({ selectedValues, selectedOptions }) {
 // 微信相关
 const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
+const groupStateStore = useGroupStateStore()
 
 // 用户授权，回调，获取openID
 function getWxAuth() {
@@ -211,8 +213,19 @@ async function handlePay() {
           package: data.packageVal, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
           signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
           paySign: data.paySign, // 支付签名
-          success(res: any) {
+          success: async (res: any) => {
             console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
+            const loginInfo = getLoginInfo()
+            // 支付成功后生成拼团业务订单
+            if (loginInfo && wxStateStore.openId && groupStateStore.cardInfo) {
+              const createOrderRes = await addGroupBuyingOrder({
+                openId: wxStateStore.openId,
+                groupBuyingId: groupStateStore.cardInfo.id,
+                mobile: loginInfo.phone,
+                nickName: loginInfo.name,
+              })
+              console.log('addGroupBuyingOrder', createOrderRes)
+            }
           },
           // 支付取消回调函数
           cancel(res: any) {

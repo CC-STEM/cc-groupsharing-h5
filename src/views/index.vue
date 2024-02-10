@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watchEffect } from 'vue'
-import BScroll from '@better-scroll/core'
+import { nextTick, ref, watch, watchEffect } from 'vue'
+
+// import BScroll from '@better-scroll/core'
 import { useRoute, useRouter } from 'vue-router'
 import type { Avatar, GroupSharingCardInfo, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
@@ -18,64 +19,15 @@ import play3 from '@/assets/play3.png'
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
 import { getGroupSharingData, getSharedGroupData } from '@/services'
+import { useGroupStateStore } from '@/stores'
 
 const router = useRouter()
 const route = useRoute()
 const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
 const cardList = ref<GroupSharingCardInfo[]>([
-  // {
-  //   "id": 1706177382872472,
-  //   "storeName": "",
-  //   "vipName": "会员卡1111",
-  //   "startTime": "2024-01-22",
-  //   "endTime": "2024-01-25",
-  //   "price": 500.00,
-  //   "groupBuyingPrice": 420.00,
-  //   "deadline": 30,
-  //   "number": 2,
-  //   "lessonNumber": 4,
-  //   "details": "详情说明详情说明详情说明详情说明详情说明详情说明",
-  //   "shareTitle": "主标题文案",
-  //   "shareSubTitle": "副标题文案",
-  //   "shareImgUrl": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-01-25/20240125180919_22022312542M617_0_lp.jpg",
-  //   "rules": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-02-02/20240202171159_微信图片_20240202171056.jpg"
-  // },
-  // {
-  //   "id": 1706232500710665,
-  //   "storeName": "",
-  //   "vipName": "新年有礼拼团",
-  //   "startTime": "2024-01-26",
-  //   "endTime": "2024-01-26",
-  //   "price": 888.00,
-  //   "groupBuyingPrice": 8.00,
-  //   "deadline": 30,
-  //   "number": 2,
-  //   "lessonNumber": 2,
-  //   "details": "活动仅限武汉地区门店进行",
-  //   "shareTitle": "跟我一起加入CC编程吧 ",
-  //   "shareSubTitle": "做科技少年",
-  //   "shareImgUrl": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-01-26/20240126092708_IMG_5724.JPG",
-  //   "rules": "<p>1.会员只能当<u>团长</u>，不可当团员； </p><p>2.有效期</p><p>3.最多一人可参加..</p><p><br></p>"
-  // },
-  // {
-  //   "id": 1706232500710665,
-  //   "storeName": "",
-  //   "vipName": "新年有礼拼团",
-  //   "startTime": "2024-01-26",
-  //   "endTime": "2024-01-26",
-  //   "price": 888.00,
-  //   "groupBuyingPrice": 8.00,
-  //   "deadline": 30,
-  //   "number": 2,
-  //   "lessonNumber": 2,
-  //   "details": "活动仅限武汉地区门店进行",
-  //   "shareTitle": "跟我一起加入CC编程吧 ",
-  //   "shareSubTitle": "做科技少年",
-  //   "shareImgUrl": "https://cc-web-1313504415.cos.ap-shanghai.myqcloud.com/web_pc/2024-01-26/20240126092708_IMG_5724.JPG",
-  //   "rules": "<p>1.会员只能当<u>团长</u>，不可当团员； </p><p>2.有效期</p><p>3.最多一人可参加..</p><p><br></p>"
-  // }
 ])
+const { setGroupBuyingCardInfo } = useGroupStateStore()
 
 const curSharedGroupInfo = ref()
 
@@ -89,7 +41,7 @@ const avatarList = ref<Avatar[]>([{
   url: Avatar3,
 }])
 
-const scrollRef = ref(null)
+// const scrollRef = ref(null)
 const showCardDetailSheetOption = ref({
   show: false,
 })
@@ -116,26 +68,26 @@ function clickDetail(curCard: GroupSharingCardInfo) {
 
 let scrollIns
 
-onMounted(() => {
-  console.log('scrollRef.value', scrollRef.value)
-  scrollIns = new BScroll(scrollRef.value, {
-    probeType: 3,
-    scrollX: true,
-    click: true,
-  })
+// onMounted(() => {
+//   console.log('scrollRef.value', scrollRef.value)
+//   scrollIns = new BScroll(scrollRef.value, {
+//     probeType: 3,
+//     scrollX: true,
+//     click: true,
+//   })
 
-  scrollIns.on('scrollStart', () => {
-    console.log('scrollStart-')
-  })
-  scrollIns.on('scroll', ({ y }) => {
-    console.log('scrolling-', y)
-  })
-  scrollIns.on('scrollEnd', (pos) => {
-    console.log(pos)
-  })
-  console.log('scroll', -(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth))
-  scrollIns.scrollTo(-(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth) / 2, 0)
-})
+//   scrollIns.on('scrollStart', () => {
+//     console.log('scrollStart-')
+//   })
+//   scrollIns.on('scroll', ({ y }) => {
+//     console.log('scrolling-', y)
+//   })
+//   scrollIns.on('scrollEnd', (pos) => {
+//     console.log(pos)
+//   })
+//   console.log('scroll', -(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth))
+//   scrollIns.scrollTo(-(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth) / 2, 0)
+// })
 
 // 发起拼团
 function handleCreateGroup() {
@@ -146,16 +98,10 @@ function handleJoinGroup() {
   router.push('/StudentInfo')
 }
 
-// if (wx) {
-//   wx.config({
-//     debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-//     appId: 'wx0878ff5cfebc43b2', // 必填，公众号的唯一标识
-//     timestamp: Math.round(Date.now() / 1000), // 必填，生成签名的时间戳
-//     nonceStr: '', // 必填，生成签名的随机串
-//     signature: '',// 必填，签名
-//     jsApiList: ['checkJsApi', 'updateAppMessageShareData'] // 必填，需要使用的JS接口列表
-//   });
-// }
+function changeCard(cardIndex: number) {
+  console.log('changeCard', cardIndex)
+  curSelectedCard.value = cardList.value[cardIndex]
+}
 
 watchEffect(async () => {
   const query = route.query
@@ -172,14 +118,21 @@ watchEffect(async () => {
       isActiveStyle: true,
       width: 618,
     }))
-    if (cardList.value.length)
+    if (cardList.value.length) {
       shopName.value = cardList.value[0].storeName
+      curSelectedCard.value = cardList.value[0]
+    }
 
     nextTick(() => {
       if (scrollIns)
         scrollIns.refresh()
     })
   }
+})
+
+watch(curSelectedCard, (newVal) => {
+  if (newVal)
+    setGroupBuyingCardInfo(newVal)
 })
 </script>
 
@@ -195,14 +148,19 @@ watchEffect(async () => {
           <span>{{ groupSharingStatus }}</span>
         </div>
       </div>
-      <div ref="scrollRef" class="cardContainer">
-        <div class="subContainer">
-          <GroupSharingCard
-            v-for="(item, index) in cardList" :key="index" class="sharingCard" :card-info="item"
-            @detail-click="clickDetail(item)"
-          />
-        </div>
+      <div class="cardContainertest">
+        <van-swipe class="my-swipe" indicator-color="white" @change="changeCard">
+          <van-swipe-item v-for="(item, index) in cardList" :key="index">
+            <GroupSharingCard class="sharingCard" :card-info="item" @detail-click="clickDetail(item)" />
+          </van-swipe-item>
+        </van-swipe>
       </div>
+      <!-- <div ref="scrollRef" class="cardContainer">
+        <div class="subContainer">
+          <GroupSharingCard v-for="(item, index) in cardList" :key="index" class="sharingCard" :card-info="item"
+            @detail-click="clickDetail(item)" @click="" />
+        </div>
+      </div> -->
       <div class="shareBtn">
         分享
       </div>
@@ -221,7 +179,7 @@ watchEffect(async () => {
         <div class="btnList">
           <div class="singleBuyBtn">
             <div class="price">
-              ￥88.00
+              ￥{{ curSelectedCard?.price }}
             </div>
             <div class="desc">
               单独购买
@@ -229,7 +187,7 @@ watchEffect(async () => {
           </div>
           <div class="createGroupBtn" @click="handleCreateGroup">
             <div class="price">
-              ￥55.00
+              ￥{{ curSelectedCard?.groupBuyingPrice }}
             </div>
             <div class="desc">
               发起拼团
@@ -240,7 +198,7 @@ watchEffect(async () => {
               立即参团
             </div>
             <div class="price">
-              ￥55.00
+              ￥{{ curSelectedCard?.groupBuyingPrice }}
             </div>
           </div>
         </div>
@@ -409,6 +367,17 @@ watchEffect(async () => {
           color: #E43E12;
         }
       }
+    }
+
+    .cardContainertest {
+      white-space: nowrap;
+      width: 100%;
+      // overflow-x: scroll;
+      height: 336px;
+      // display: flex;
+      // flex-direction: column;
+      // justify-content: center;
+      // align-items: center;
     }
 
     .cardContainer {
@@ -702,5 +671,20 @@ watchEffect(async () => {
       color: #E43E12;
     }
   }
+}
+
+:deep(.van-swipe-item) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.van-swipe__indicator) {
+  width: 10px;
+  height: 10px;
+}
+
+:deep(.van-swipe) {
+  height: 100%;
 }
 </style>

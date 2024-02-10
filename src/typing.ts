@@ -157,3 +157,11 @@ export interface GroupSharingCardInfo {
 export type GetGroupSharingDataRes = BaseResponse & {
   data: GroupSharingCardInfo[]
 }
+
+export interface AddGroupBuyingOrderReq {
+  groupBuyingId: number // 拼团活动id 后台配置
+  groupBuyingOrderId?: number // 拼团订单id
+  mobile: string
+  nickName: string
+  openId: string
+}

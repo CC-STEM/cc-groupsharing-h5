@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { AddStudentInfoReq, BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
+import type { AddGroupBuyingOrderReq, AddStudentInfoReq, BaseResponse, GetGroupSharingDataRes, GetOpenIdReq, GetOpenIdRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -94,6 +94,14 @@ export function addStudentInfo(data: AddStudentInfoReq) {
   return axiosIns<BaseResponse>({
     method: 'POST',
     url: `/api/app/h5/addMember`,
+    data,
+  })
+}
+
+export function addGroupBuyingOrder(data: AddGroupBuyingOrderReq) {
+  return axiosIns<BaseResponse>({
+    method: 'POST',
+    url: `/api/app/h5/addGroupBuyingOrder`,
     data,
   })
 }
