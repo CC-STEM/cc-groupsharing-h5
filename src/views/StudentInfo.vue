@@ -214,7 +214,7 @@ async function handlePay() {
           signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
           paySign: data.paySign, // 支付签名
           success: async (res: any) => {
-            console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
+            alert(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
             const loginInfo = getLoginInfo()
             // 支付成功后生成拼团业务订单
             if (loginInfo && wxStateStore.openId && groupStateStore.cardInfo) {
@@ -224,7 +224,7 @@ async function handlePay() {
                 mobile: loginInfo.phone,
                 nickName: loginInfo.name,
               })
-              console.log('addGroupBuyingOrder', createOrderRes)
+              alert(`addGroupBuyingOrder----${JSON.stringify(createOrderRes)}`)
             }
           },
           // 支付取消回调函数
