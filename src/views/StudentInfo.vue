@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import wx from 'weixin-js-sdk'
 import PageView from '@/components/PageView.vue'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
-import { useGroupStateStore, useWXStateStore } from '@/stores'
+import { useWXStateStore } from '@/stores'
 import { getLoginInfo } from '@/utils/index'
 import { addGroupBuyingOrder, addStudentInfo, getInitSDKAuthConfig, getWxOpenId, wxPrepay } from '@/services/api'
+import { localStorage } from '@/utils/local-storage'
 
 const route = useRoute()
+const router = useRouter()
 const studentInfo = ref<StudentInfoType>({
   childrenName: '',
   school: '',
@@ -102,7 +104,7 @@ function onLearningCodeConfirm({ selectedValues, selectedOptions }) {
 // 微信相关
 const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
-const groupStateStore = useGroupStateStore()
+// const groupStateStore = useGroupStateStore()
 
 // 用户授权，回调，获取openID
 function getWxAuth() {
@@ -201,12 +203,24 @@ async function handlePay() {
   }
 
   // 先是后端用户下单，下完单之后，前端再调取微信支付
-  wxPrepay({ openId: wxStateStore.openId, payAmount: 1, payDes: '测试支付' })
-    .then((res) => {
+  wxPrepay({ openId: wxStateStore.openId, payAmount: 0.01, payDes: '测试支付' })
+    .then(async (res) => {
       console.log('wxPrepay', res)
       const { data: { code, data } } = res
       if (code === 200) {
         console.log(`---统一下单成功，返回结果:${JSON.stringify(data)}\n`)
+
+        // 支付成功后生成拼团业务订单
+        // 临时测试
+        const loginInfo = getLoginInfo()
+        const cardInfo = localStorage.get('cardInfo')
+        const groupOrderId = localStorage.get('groupOrderId')
+
+        console.log('loginInfo', loginInfo)
+        console.log('openId', wxStateStore.openId)
+        console.log('cardInfo', cardInfo)
+        console.log('groupOrderId', groupOrderId)
+
         wx.chooseWXPay({
           timestamp: Number(data.timeStamp), // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
           nonceStr: data.nonceStr, // 支付签名随机串，不长于 32 位
@@ -214,17 +228,20 @@ async function handlePay() {
           signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
           paySign: data.paySign, // 支付签名
           success: async (res: any) => {
-            alert(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
+            console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
             const loginInfo = getLoginInfo()
             // 支付成功后生成拼团业务订单
-            if (loginInfo && wxStateStore.openId && groupStateStore.cardInfo) {
-              const createOrderRes = await addGroupBuyingOrder({
+            if (loginInfo && wxStateStore.openId && cardInfo) {
+              const { data: { data: orderId } } = await addGroupBuyingOrder({
                 openId: wxStateStore.openId,
-                groupBuyingId: groupStateStore.cardInfo.id,
+                groupBuyingId: (JSON.parse(cardInfo)).id,
+                groupBuyingOrderId: groupOrderId || undefined,
                 mobile: loginInfo.phone,
                 nickName: loginInfo.name,
               })
-              alert(`addGroupBuyingOrder----${JSON.stringify(createOrderRes)}`)
+              console.log('addGroupBuyingOrderId----', orderId)
+              // 跳转到主页
+              router.push(`/?groupOrderId=${orderId}`)
             }
           },
           // 支付取消回调函数

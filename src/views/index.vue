@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { nextTick, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, ref, watch, watchEffect } from 'vue'
 
 // import BScroll from '@better-scroll/core'
 import { useRoute, useRouter } from 'vue-router'
-import type { Avatar, GroupSharingCardInfo, PlayItem } from '@/typing'
+import type { Avatar, GroupOrderInfo, GroupSharingCardInfo, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
@@ -19,17 +19,52 @@ import play3 from '@/assets/play3.png'
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
 import { getGroupSharingData, getSharedGroupData } from '@/services'
-import { useGroupStateStore } from '@/stores'
+
+// import { useGroupStateStore } from '@/stores'
+import { localStorage } from '@/utils/local-storage'
 
 const router = useRouter()
 const route = useRoute()
 const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
+const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
+
+const groupShareUserName = computed(() => {
+  const query = route.query
+  return query.shareUser || ''
+})
+
+const isSharedGroup = computed(() => {
+  const query = route.query
+  if (query.groupOrderId)
+    return true
+
+  return false
+})
+
+if (route.query && route.query.groupOrderId)
+  localStorage.set('groupOrderId', route.query.groupOrderId)
+
+const firstTitle = computed(() => {
+  // 区分已发起拼团和未发起的情况（管理员初始配置）
+  if (isSharedGroup.value)
+    return '参与拼团'
+
+  return '发起拼团'
+})
+
+const secondTitle = computed(() => {
+  if (!isSharedGroup.value)
+    return '快呼唤您的小伙伴一起参加吧'
+
+  return `${groupShareUserName.value || '***'} 邀请您来参与拼团啦！`
+})
+
 const cardList = ref<GroupSharingCardInfo[]>([
 ])
-const { setGroupBuyingCardInfo } = useGroupStateStore()
+// const { setGroupBuyingCardInfo } = useGroupStateStore()
 
-const curSharedGroupInfo = ref()
+// const curSharedGroupInfo = ref()
 
 const curSelectedCard = ref<GroupSharingCardInfo | null>(null)
 
@@ -67,6 +102,8 @@ function clickDetail(curCard: GroupSharingCardInfo) {
 }
 
 let scrollIns
+
+console.log('WeixinJSBridge', WeixinJSBridge)
 
 // onMounted(() => {
 //   console.log('scrollRef.value', scrollRef.value)
@@ -106,9 +143,11 @@ function changeCard(cardIndex: number) {
 watchEffect(async () => {
   const query = route.query
   console.log('routeParams', query)
-  if (query.activityId) {
-    const res = await getSharedGroupData(query.activityId as string)
-    console.log('getSharedGroupData', res)
+  if (query.groupOrderId) {
+    const { data: { data } } = await getSharedGroupData(query.groupOrderId as string)
+    console.log('getSharedGroupData', data)
+    curGroupOrderInfo.value = data
+    curSelectedCard.value = data.groupBuyingInfo
   }
   else {
     const { data: { data } } = await getGroupSharingData()
@@ -132,7 +171,8 @@ watchEffect(async () => {
 
 watch(curSelectedCard, (newVal) => {
   if (newVal)
-    setGroupBuyingCardInfo(newVal)
+    // setGroupBuyingCardInfo(newVal)
+    localStorage.set('cardInfo', JSON.stringify(newVal))
 })
 </script>
 
@@ -168,15 +208,15 @@ watch(curSelectedCard, (newVal) => {
     <div class="content">
       <div class="contentTitle">
         <div class="firstTitle">
-          参与拼团
+          {{ firstTitle }}
         </div>
-        <div v-if="curSharedGroupInfo" class="secondTitle">
-          王梓峰 邀请您来参与拼团啦!
+        <div class="secondTitle">
+          {{ secondTitle }}
         </div>
       </div>
       <div class="joinGroup">
         <JoinGroupAvatarList :avatar-list="avatarList" :is-support-add="true" />
-        <div class="btnList">
+        <div v-if="!isSharedGroup" class="createGrougBtnList">
           <div class="singleBuyBtn">
             <div class="price">
               ￥{{ curSelectedCard?.price }}
@@ -193,14 +233,61 @@ watch(curSelectedCard, (newVal) => {
               发起拼团
             </div>
           </div>
-          <div v-if="false" class="joinGroupBtn" @click="handleJoinGroup">
+        </div>
+        <div v-if="isSharedGroup && curGroupOrderInfo" class="btnList">
+          <template v-if="curSelectedCard && (Date.now() > new Date(curSelectedCard.endTime).getTime())">
+            <div class="groupTips">
+              该拼团已结束！
+            </div>
+            <div class="joinGroupBtn" @click="() => { }">
+              <div class="desc">
+                我知道了
+              </div>
+            </div>
+          </template>
+          <template
+            v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber === curSelectedCard.number"
+          >
+            <div class="groupTips">
+              当前团已满员！
+            </div>
+            <div class="joinGroupBtn" @click="() => { }">
+              <div class="desc">
+                前往活动主页发起新团
+              </div>
+            </div>
+          </template>
+          <template
+            v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber < curSelectedCard.number"
+          >
+            <div v-if="curGroupOrderInfo.isInOrder" class="groupTips">
+              您已在团中！
+            </div>
+            <div v-if="curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="() => { }">
+              <div class="desc">
+                邀请好友
+              </div>
+            </div>
+            <div v-if="!curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="handleJoinGroup">
+              <div class="desc">
+                立即参团
+              </div>
+              <div class="price">
+                ￥{{ curSelectedCard.groupBuyingPrice }}
+              </div>
+            </div>
+          </template>
+          <!-- <div class="groupTips">
+            该拼团已结束
+          </div>
+          <div class="joinGroupBtn" @click="handleJoinGroup">
             <div class="desc">
               立即参团
             </div>
             <div class="price">
               ￥{{ curSelectedCard?.groupBuyingPrice }}
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
       <div class="joinGroupPlay">
@@ -456,7 +543,7 @@ watch(curSelectedCard, (newVal) => {
 
     .joinGroup {
       width: 700px;
-      height: 324px;
+      height: 385px;
       background: #FFFFFF;
       border-radius: 30px;
       margin-bottom: 22px;
@@ -466,7 +553,7 @@ watch(curSelectedCard, (newVal) => {
       align-items: center;
       padding-top: 37px;
 
-      .btnList {
+      .createGrougBtnList {
         margin-top: 51px;
         height: 88px;
         width: auto;
@@ -529,6 +616,23 @@ watch(curSelectedCard, (newVal) => {
             color: #FFFFFF;
           }
         }
+      }
+
+      .btnList {
+        margin-top: 51px;
+        // height: 88px;
+        width: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .groupTips {
+          font-size: 28px;
+          font-family: PingFang SC;
+          font-weight: bold;
+          color: #000000;
+          margin-bottom: 29px;
+        }
 
         .joinGroupBtn {
           display: flex;
@@ -536,7 +640,7 @@ watch(curSelectedCard, (newVal) => {
           align-items: center;
           justify-content: center;
           width: 637px;
-          // height: 88px;
+          height: 88px;
           background: linear-gradient(179deg, #FFE691, #FF3A05);
           border-radius: 44px;
 

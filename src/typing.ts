@@ -165,3 +165,20 @@ export interface AddGroupBuyingOrderReq {
   nickName: string
   openId: string
 }
+
+export type AddGroupBuyingOrderRes = BaseResponse & {
+  data: string // 订单id
+}
+
+export interface GroupOrderInfo {
+  groupBuyingInfo: GroupSharingCardInfo
+  currentNumber: number // 当前参团人数
+  isHead: number // 当前用户是否团长
+  isInOrder: number // 当前用户是否已参团
+  orderId: string
+  // number: number; // 活动配置人数 临时用（后续从groupBuyingInfo 中取）
+}
+
+export type GetSharedGroupDataRes = BaseResponse & {
+  data: GroupOrderInfo
+}

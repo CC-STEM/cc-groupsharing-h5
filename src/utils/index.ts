@@ -16,5 +16,5 @@ export function setLoginInfo(user: User) {
 }
 
 export function clearLoginInfo() {
-  localStorage.removeItem('userInfo')
+  store.clearAll()
 }
