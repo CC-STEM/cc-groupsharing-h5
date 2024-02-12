@@ -15,7 +15,7 @@ const curCard = computed(() => props.curSelectedCard)
 <template>
   <van-action-sheet v-model:show="cardShowOption.show" title="详情说明" cancel-text="我知道了">
     <!-- <div class="sheetContent">内容</div> -->
-    <GroupSharingCard :card-info="curCard" />
+    <GroupSharingCard :card-info="curCard" :is-active-style="true" />
     <div class="detailTitle">
       仅限于通用课程，仅限于{{ curCard.storeName }}门店使用
     </div>

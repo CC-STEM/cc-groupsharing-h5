@@ -6,11 +6,11 @@ import InValidCardBackImg from '@/assets/invalidCard.png'
 import { px2vw } from '@/utils/calcStyle'
 import { transformDateString } from '@/utils/index'
 
-const props = defineProps<{ cardInfo: GroupSharingCardInfo }>()
+const props = defineProps<{ cardInfo: GroupSharingCardInfo, isActiveStyle?: boolean }>()
 const curEmit = defineEmits(['detailClick'])
 const realWidth = computed(() => px2vw(props.cardInfo?.width || 656))
 const realHeight = computed(() => px2vw(props.cardInfo?.height || 285))
-const backImgUrl = computed(() => props.cardInfo?.isActiveStyle ? `url(${ValidCardBackImg})` : `url(${InValidCardBackImg})`)
+const backImgUrl = computed(() => props.isActiveStyle ? `url(${ValidCardBackImg})` : `url(${InValidCardBackImg})`)
 </script>
 
 <template>

@@ -3,15 +3,12 @@ import { computed, nextTick, ref, watch, watchEffect } from 'vue'
 import wx from 'weixin-js-sdk'
 
 import { useRoute, useRouter } from 'vue-router'
-import type { Avatar, GroupOrderInfo, GroupSharingCardInfo, PlayItem } from '@/typing'
+import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
 import CardDescDetail from '@/components/Card/CardDescDetail.vue'
 
-import Avatar1 from '@/assets/pic1.jpg'
-import Avatar2 from '@/assets/pic2.jpg'
-import Avatar3 from '@/assets/pic5.jpg'
 import play1 from '@/assets/play1.png'
 import play2 from '@/assets/play2.png'
 import play3 from '@/assets/play3.png'
@@ -23,6 +20,7 @@ import { getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpe
 // import { useGroupStateStore } from '@/stores'
 import { localStorage } from '@/utils/local-storage'
 import { useWXStateStore } from '@/stores'
+import { getLoginInfo } from '@/utils/index'
 
 const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
@@ -46,7 +44,7 @@ const isSharedGroup = computed(() => {
 })
 
 if (route.query && route.query.groupOrderId)
-  localStorage.set('groupOrderId', route.query.groupOrderId)
+  localStorage.set('groupOrderId', route.query.groupOrderId) // TODO:后续改为跳转/StudentInfo路由时带groupOrderId参数
 
 const firstTitle = computed(() => {
   // 区分已发起拼团和未发起的情况（管理员初始配置）
@@ -71,32 +69,41 @@ const cardList = ref<GroupSharingCardInfo[]>([
 
 const curSelectedCard = ref<GroupSharingCardInfo | null>(null)
 
-const avatarList = ref<Avatar[]>([{
-  url: Avatar1,
-}, {
-  url: Avatar2,
-}, {
-  url: Avatar3,
-}])
-
 // const scrollRef = ref(null)
 const showCardDetailSheetOption = ref({
   show: false,
 })
 
-const playList: PlayItem[] = [{
-  imgUrl: play1,
-  title: '开团/参团',
-  subTitle: '拼团享低价',
-}, {
-  imgUrl: play2,
-  title: '邀请新用户参团',
-  subTitle: '分享优惠多',
-}, {
-  imgUrl: play3,
-  title: '2人成团',
-  subTitle: '',
-}]
+const playList = computed<PlayItem[]>(() => {
+  if (curSelectedCard.value) {
+    return [{
+      imgUrl: play1,
+      title: '开团/参团',
+      subTitle: '拼团享低价',
+    }, {
+      imgUrl: play2,
+      title: '邀请新用户参团',
+      subTitle: '分享优惠多',
+    }, {
+      imgUrl: play3,
+      title: `${curSelectedCard.value.number}人成团`,
+      subTitle: '',
+    }]
+  }
+  return [{
+    imgUrl: play1,
+    title: '开团/参团',
+    subTitle: '拼团享低价',
+  }, {
+    imgUrl: play2,
+    title: '邀请新用户参团',
+    subTitle: '分享优惠多',
+  }, {
+    imgUrl: play3,
+    title: `*人成团`,
+    subTitle: '',
+  }]
+})
 
 function clickDetail(curCard: GroupSharingCardInfo) {
   console.log('click---')
@@ -105,10 +112,6 @@ function clickDetail(curCard: GroupSharingCardInfo) {
 }
 
 let scrollIns
-
-function handleShare() {
-  // 测试按钮触发分享
-}
 
 // onMounted(() => {
 //   console.log('scrollRef.value', scrollRef.value)
@@ -154,7 +157,6 @@ watchEffect(async () => {
     curGroupOrderInfo.value = data
     cardList.value = [data.groupBuyingInfo].map(item => ({
       ...item,
-      isActiveStyle: true,
       width: 618,
     }))
     shopName.value = data.groupBuyingInfo.storeName
@@ -165,7 +167,6 @@ watchEffect(async () => {
     console.log('getGroupSharingData', data)
     cardList.value = data.map(item => ({
       ...item,
-      isActiveStyle: true,
       width: 618,
     }))
     if (cardList.value.length) {
@@ -246,6 +247,16 @@ function initWxConfig() {
       wx.ready(() => {
         console.log(`---初始化wx.config成功\n`)
         wxStateStore.setWx(wx)
+        let shareLink = `${window.location.origin}${window.location.pathname}`
+        const loginInfo = getLoginInfo()
+        if (loginInfo.name)
+          shareLink += `?shareUser=${loginInfo.name}`
+
+        if (route.query.groupOrderId)
+          shareLink += `&groupOrderId=${route.query.groupOrderId}`
+
+        console.log('shareLink', shareLink)
+
         wx.checkJsApi({
           jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 需要检测的JS接口列表，所有JS接口列表见附录2,
           success: (res: any) => {
@@ -258,7 +269,7 @@ function initWxConfig() {
         // 自定义分享
         wx.updateAppMessageShareData({
           imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
-          link: `${window.location.origin}${window.location.pathname}`,
+          link: shareLink,
           desc: '拼团活动期间，用户可在公众号网页发起拼团',
           title: '邀好友一起拼',
           success() {
@@ -315,18 +326,12 @@ initWxConfig()
       <div class="cardContainertest">
         <van-swipe class="my-swipe" indicator-color="white" @change="changeCard">
           <van-swipe-item v-for="(item, index) in cardList" :key="index">
-            <GroupSharingCard class="sharingCard" :card-info="item" @detail-click="clickDetail(item)" />
+            <GroupSharingCard
+              class="sharingCard" :is-active-style="true" :card-info="item"
+              @detail-click="clickDetail(item)"
+            />
           </van-swipe-item>
         </van-swipe>
-      </div>
-      <!-- <div ref="scrollRef" class="cardContainer">
-        <div class="subContainer">
-          <GroupSharingCard v-for="(item, index) in cardList" :key="index" class="sharingCard" :card-info="item"
-            @detail-click="clickDetail(item)" @click="" />
-        </div>
-      </div> -->
-      <div class="shareBtn" @click="handleShare">
-        分享
       </div>
     </div>
     <div class="content">
@@ -339,7 +344,10 @@ initWxConfig()
         </div>
       </div>
       <div class="joinGroup">
-        <JoinGroupAvatarList :avatar-list="avatarList" :is-support-add="true" />
+        <JoinGroupAvatarList
+          v-if="curSelectedCard" :number="curSelectedCard.number"
+          :current-number="curGroupOrderInfo?.currentNumber" :is-support-add="true"
+        />
         <div v-if="!isSharedGroup" class="createGrougBtnList">
           <div class="singleBuyBtn">
             <div class="price">

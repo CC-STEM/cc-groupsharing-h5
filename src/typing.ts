@@ -25,16 +25,16 @@ export interface PlayItem {
   subTitle?: string
 }
 
-export interface OrderInfo {
-  card: GroupSharingCardInfo
-  avatarList: Avatar[]
-  orderStatus: ORDER_STATUS_ENUM
-}
+// export interface OrderInfo {
+//   card: GroupSharingCardInfo
+//   avatarList: Avatar[]
+//   orderStatus: ORDER_STATUS_ENUM
+// }
 
 export enum ORDER_STATUS_ENUM {
-  COMPLETED = 'COMPLETED',
-  UNCOMPLETED = 'UNCOMPLETED',
-  INVALID = 'INVALID',
+  UNCOMPLETED = 0,
+  COMPLETED = 1,
+  INVALID = 2,
 }
 
 export const ORDER_STATUS_CN_MAP = {
@@ -134,7 +134,6 @@ export type PhoneLoginRes = BaseResponse & {
 }
 
 export interface GroupSharingCardInfo {
-  isActiveStyle?: boolean
   width?: number
   height?: number
   deadline?: number
@@ -176,9 +175,20 @@ export interface GroupOrderInfo {
   isHead: number // 当前用户是否团长
   isInOrder: number // 当前用户是否已参团
   orderId: string
-  // number: number; // 活动配置人数 临时用（后续从groupBuyingInfo 中取）
 }
 
 export type GetSharedGroupDataRes = BaseResponse & {
   data: GroupOrderInfo
+}
+
+export interface MyHistoryOrderInfo {
+  groupBuyingInfo: GroupSharingCardInfo
+  currentNumber: number // 当前参团人数
+  isHead: number // 当前用户是否团长
+  id: string
+  status: number // 订单状态
+}
+
+export type GetHistoryOrderListRes = BaseResponse & {
+  data: MyHistoryOrderInfo[]
 }
