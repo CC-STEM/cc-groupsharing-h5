@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, watchEffect } from 'vue'
+import wx from 'weixin-js-sdk'
 
-// import BScroll from '@better-scroll/core'
 import { useRoute, useRouter } from 'vue-router'
 import type { Avatar, GroupOrderInfo, GroupSharingCardInfo, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
@@ -18,11 +18,14 @@ import play3 from '@/assets/play3.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
-import { getGroupSharingData, getSharedGroupData } from '@/services'
+import { getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
 import { localStorage } from '@/utils/local-storage'
+import { useWXStateStore } from '@/stores'
 
+const wxAppID = 'wx65b4e85b0e8a6b93'
+const wxStateStore = useWXStateStore()
 const router = useRouter()
 const route = useRoute()
 const shopName = ref('门店名称')
@@ -57,7 +60,7 @@ const secondTitle = computed(() => {
   if (!isSharedGroup.value)
     return '快呼唤您的小伙伴一起参加吧'
 
-  return `${groupShareUserName.value || '***'} 邀请您来参与拼团啦！`
+  return groupShareUserName.value ? `${groupShareUserName.value} 邀请您来参与拼团啦！` : ''
 })
 
 const cardList = ref<GroupSharingCardInfo[]>([
@@ -103,7 +106,9 @@ function clickDetail(curCard: GroupSharingCardInfo) {
 
 let scrollIns
 
-console.log('WeixinJSBridge', WeixinJSBridge)
+function handleShare() {
+  // 测试按钮触发分享
+}
 
 // onMounted(() => {
 //   console.log('scrollRef.value', scrollRef.value)
@@ -147,6 +152,12 @@ watchEffect(async () => {
     const { data: { data } } = await getSharedGroupData(query.groupOrderId as string)
     console.log('getSharedGroupData', data)
     curGroupOrderInfo.value = data
+    cardList.value = [data.groupBuyingInfo].map(item => ({
+      ...item,
+      isActiveStyle: true,
+      width: 618,
+    }))
+    shopName.value = data.groupBuyingInfo.storeName
     curSelectedCard.value = data.groupBuyingInfo
   }
   else {
@@ -174,6 +185,119 @@ watch(curSelectedCard, (newVal) => {
     // setGroupBuyingCardInfo(newVal)
     localStorage.set('cardInfo', JSON.stringify(newVal))
 })
+
+// 微信相关
+// 用户授权，回调，获取openID
+function getWxAuth() {
+  // 官方参考文档：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
+  const code: string = route.query.code as string
+  if (!code) {
+    // 微信授权，授权后重定向到本页面
+    const localUrl = window.location.href
+    console.log(localUrl)
+    window.location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${wxAppID}&redirect_uri=${localUrl}&response_type=code&scope=snsapi_base&state=STATE&connect_redirect=1#wechat_redirect`
+  }
+  else {
+    // 如果已经授权，获取code参数，通过后端获取openID，返回前端，保存本地缓存
+    getWxOpenId({ code })
+      .then((res) => {
+        console.log('getWxOpenId', res)
+        const { data: { code, data } } = res
+        // openID保存本地
+        // wxStateStore.setOpenId('obPGK6JKCgHgBY2xWoadDxZmSGpo')
+        if (code === 200) {
+          // 测试openId obPGK6JKCgHgBY2xWoadDxZmSGpo
+          console.log(`---授权成功，openID:${data}\n`)
+          wxStateStore.setOpenId(data)
+        }
+        else {
+          // 抛出错误
+          console.log(`---获取openID失败:${JSON.stringify(res)}\n`)
+        }
+      }).catch((err: any) => {
+        console.log(`---获取openID失败err:${JSON.stringify(err)}\n`)
+      })
+  }
+}
+
+// 初始化wx JSSDK
+function initWxConfig() {
+  // 后端获取access_token和ticket，返回签名信息，初始化wx.config
+  getInitSDKAuthConfig({
+    url: document.URL,
+  }).then((res) => {
+    console.log('getInitSDKAuthConfig', res)
+    const { data: { code, data } } = res
+    if (code === 200) {
+      console.log(`---获取 ticket成功，返回结果:${JSON.stringify(data)}\n`)
+
+      // 官方参考文档：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#1
+      // 初始化验证jssdk
+      wx.config({
+        debug: true, // 这里一般在测试阶段先用ture，等打包给后台的时候就改回false,
+        appId: wxAppID, // 必填，公众号的唯一标识
+        timestamp: Number(data.timestamp), // 必填，生成签名的时间戳
+        nonceStr: data.nonceStr, // 必填，生成签名的随机串
+        signature: data.signature, // 必填，签名
+        jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 必填，需要使用的JS接口列表
+      })
+
+      // 通过ready接口处理成功验证
+      wx.ready(() => {
+        console.log(`---初始化wx.config成功\n`)
+        wxStateStore.setWx(wx)
+        wx.checkJsApi({
+          jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 需要检测的JS接口列表，所有JS接口列表见附录2,
+          success: (res: any) => {
+            // 以键值对的形式返回，可用的api值true，不可用为false
+            // 如：{"checkResult":{"chooseWXPay":true},"errMsg":"checkJsApi:ok"}
+            console.log(`---检查wx.checkJsApi[chooseWXPay]成功：${JSON.stringify(res)}}\n`)
+          },
+        })
+
+        // 自定义分享
+        wx.updateAppMessageShareData({
+          imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+          link: `${window.location.origin}${window.location.pathname}`,
+          desc: '拼团活动期间，用户可在公众号网页发起拼团',
+          title: '邀好友一起拼',
+          success() {
+            alert('设置分享成功')
+          },
+        })
+
+        wx.updateTimelineShareData({
+          imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+          link: `${window.location.origin}${window.location.pathname}`,
+          title: '邀好友一起拼',
+          success() {
+            alert('设置分享成功')
+          },
+        })
+      })
+
+      // 通过error接口处理失败验证
+      wx.error((err: any) => {
+        console.log(`---wx接口失败：${JSON.stringify(err)}}\n`)
+      })
+    }
+    else {
+      // 抛出错误
+      console.log(`---获取ticket失败，返回结果:${JSON.stringify(res)}\n`)
+    }
+  }).catch((err: any) => {
+    console.log(`---获取ticket失败err，返回结果:${JSON.stringify(err)}\n`)
+  })
+}
+
+// 微信相关处理逻辑
+if (!wxStateStore.openId) {
+  // 如果未存，则要通过授权，回调页面，获取code，然后获取openID，保存本地
+  getWxAuth()
+}
+
+// 初始化wx的jssdk的config
+initWxConfig()
 </script>
 
 <template>
@@ -201,7 +325,7 @@ watch(curSelectedCard, (newVal) => {
             @detail-click="clickDetail(item)" @click="" />
         </div>
       </div> -->
-      <div class="shareBtn">
+      <div class="shareBtn" @click="handleShare">
         分享
       </div>
     </div>

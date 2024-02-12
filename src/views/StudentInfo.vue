@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import wx from 'weixin-js-sdk'
+import { useRouter } from 'vue-router'
 import PageView from '@/components/PageView.vue'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
 import { useWXStateStore } from '@/stores'
 import { getLoginInfo } from '@/utils/index'
-import { addGroupBuyingOrder, addStudentInfo, getInitSDKAuthConfig, getWxOpenId, wxPrepay } from '@/services/api'
+import { addGroupBuyingOrder, addStudentInfo, wxPrepay } from '@/services/api'
 import { localStorage } from '@/utils/local-storage'
 
-const route = useRoute()
 const router = useRouter()
 const studentInfo = ref<StudentInfoType>({
   childrenName: '',
@@ -102,92 +100,8 @@ function onLearningCodeConfirm({ selectedValues, selectedOptions }) {
 }
 
 // 微信相关
-const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
 // const groupStateStore = useGroupStateStore()
-
-// 用户授权，回调，获取openID
-function getWxAuth() {
-  // 官方参考文档：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-  const code: string = route.query.code as string
-  if (!code) {
-    // 微信授权，授权后重定向到本页面
-    const localUrl = window.location.href
-    console.log(localUrl)
-    window.location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${wxAppID}&redirect_uri=${localUrl}&response_type=code&scope=snsapi_base&state=STATE&connect_redirect=1#wechat_redirect`
-  }
-  else {
-    // 如果已经授权，获取code参数，通过后端获取openID，返回前端，保存本地缓存
-    getWxOpenId({ code })
-      .then((res) => {
-        console.log('getWxOpenId', res)
-        const { data: { code, data } } = res
-        // openID保存本地
-        wxStateStore.setOpenId('obPGK6JKCgHgBY2xWoadDxZmSGpo')
-        if (code === 200) {
-          // wxStateStore.setOpenId(res.data.openID)
-          // 测试openId obPGK6JKCgHgBY2xWoadDxZmSGpo
-          console.log(`---授权成功，openID:${data}\n`)
-        }
-        else {
-          // 抛出错误
-          console.log(`---获取openID失败:${JSON.stringify(res)}\n`)
-        }
-      }).catch((err: any) => {
-        console.log(`---获取openID失败err:${JSON.stringify(err)}\n`)
-      })
-  }
-}
-
-// 初始化wx JSSDK
-function initWxConfig() {
-  // 后端获取access_token和ticket，返回签名信息，初始化wx.config
-  console.log('location')
-  getInitSDKAuthConfig({
-    url: document.URL,
-  }).then((res) => {
-    console.log('getInitSDKAuthConfig', res)
-    const { data: { code, data } } = res
-    if (code === 200) {
-      console.log(`---获取 ticket成功，返回结果:${JSON.stringify(data)}\n`)
-
-      // 官方参考文档：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#1
-      // 初始化验证jssdk
-      wx.config({
-        debug: true, // 这里一般在测试阶段先用ture，等打包给后台的时候就改回false,
-        appId: wxAppID, // 必填，公众号的唯一标识
-        timestamp: Number(data.timestamp), // 必填，生成签名的时间戳
-        nonceStr: data.nonceStr, // 必填，生成签名的随机串
-        signature: data.signature, // 必填，签名
-        jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 必填，需要使用的JS接口列表
-      })
-
-      // 通过ready接口处理成功验证
-      wx.ready(() => {
-        console.log(`---初始化wx.config成功\n`)
-        wx.checkJsApi({
-          jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 需要检测的JS接口列表，所有JS接口列表见附录2,
-          success: (res: any) => {
-            // 以键值对的形式返回，可用的api值true，不可用为false
-            // 如：{"checkResult":{"chooseWXPay":true},"errMsg":"checkJsApi:ok"}
-            console.log(`---检查wx.checkJsApi[chooseWXPay]成功：${JSON.stringify(res)}}\n`)
-          },
-        })
-      })
-
-      // 通过error接口处理失败验证
-      wx.error((err: any) => {
-        console.log(`---wx接口失败：${JSON.stringify(err)}}\n`)
-      })
-    }
-    else {
-      // 抛出错误
-      console.log(`---获取ticket失败，返回结果:${JSON.stringify(res)}\n`)
-    }
-  }).catch((err: any) => {
-    console.log(`---获取ticket失败err，返回结果:${JSON.stringify(err)}\n`)
-  })
-}
 
 // 支付
 async function handlePay() {
@@ -201,77 +115,70 @@ async function handlePay() {
   catch (e) {
     console.log('addStudentInfo err', e)
   }
+  console.log('wxIns', wxStateStore.wx)
+  if (wxStateStore.wx) {
+    // 先是后端用户下单，下完单之后，前端再调取微信支付
+    wxPrepay({ openId: wxStateStore.openId, payAmount: 0.01, payDes: '测试支付' })
+      .then(async (res) => {
+        console.log('wxPrepay', res)
+        const { data: { code, data } } = res
+        if (code === 200) {
+          console.log(`---统一下单成功，返回结果:${JSON.stringify(data)}\n`)
 
-  // 先是后端用户下单，下完单之后，前端再调取微信支付
-  wxPrepay({ openId: wxStateStore.openId, payAmount: 0.01, payDes: '测试支付' })
-    .then(async (res) => {
-      console.log('wxPrepay', res)
-      const { data: { code, data } } = res
-      if (code === 200) {
-        console.log(`---统一下单成功，返回结果:${JSON.stringify(data)}\n`)
+          // 支付成功后生成拼团业务订单
+          // 临时测试
+          const loginInfo = getLoginInfo()
+          const cardInfo = localStorage.get('cardInfo')
+          const groupOrderId = localStorage.get('groupOrderId')
 
-        // 支付成功后生成拼团业务订单
-        // 临时测试
-        const loginInfo = getLoginInfo()
-        const cardInfo = localStorage.get('cardInfo')
-        const groupOrderId = localStorage.get('groupOrderId')
+          console.log('loginInfo', loginInfo)
+          console.log('openId', wxStateStore.openId)
+          console.log('cardInfo', cardInfo)
+          console.log('groupOrderId', groupOrderId)
 
-        console.log('loginInfo', loginInfo)
-        console.log('openId', wxStateStore.openId)
-        console.log('cardInfo', cardInfo)
-        console.log('groupOrderId', groupOrderId)
-
-        wx.chooseWXPay({
-          timestamp: Number(data.timeStamp), // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
-          nonceStr: data.nonceStr, // 支付签名随机串，不长于 32 位
-          package: data.packageVal, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
-          signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
-          paySign: data.paySign, // 支付签名
-          success: async (res: any) => {
-            console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
-            const loginInfo = getLoginInfo()
-            // 支付成功后生成拼团业务订单
-            if (loginInfo && wxStateStore.openId && cardInfo) {
-              const { data: { data: orderId } } = await addGroupBuyingOrder({
-                openId: wxStateStore.openId,
-                groupBuyingId: (JSON.parse(cardInfo)).id,
-                groupBuyingOrderId: groupOrderId || undefined,
-                mobile: loginInfo.phone,
-                nickName: loginInfo.name,
-              })
-              console.log('addGroupBuyingOrderId----', orderId)
-              // 跳转到主页
-              router.push(`/?groupOrderId=${orderId}`)
-            }
-          },
-          // 支付取消回调函数
-          cancel(res: any) {
-            console.log(`---chooseWXPay取消，返回结果:${JSON.stringify(res)}\n`)
-          },
-          // 支付失败回调函数
-          fail(res: any) {
-            console.log(`---chooseWXPay失败，返回结果:${JSON.stringify(res)}\n`)
-          },
-        })
-      }
-      else {
-        // 抛出错误
-        console.log(`---统一下单失败，返回结果:${JSON.stringify(res)}\n`)
-      }
-    })
-    .catch((err: any) => {
-      console.log(`---统一下单失败err，返回结果:${JSON.stringify(err)}\n`)
-    })
+          wxStateStore.wx.chooseWXPay({
+            timestamp: Number(data.timeStamp), // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+            nonceStr: data.nonceStr, // 支付签名随机串，不长于 32 位
+            package: data.packageVal, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+            signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
+            paySign: data.paySign, // 支付签名
+            success: async (res: any) => {
+              console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
+              const loginInfo = getLoginInfo()
+              // 支付成功后生成拼团业务订单
+              if (loginInfo && wxStateStore.openId && cardInfo) {
+                const { data: { data: orderId } } = await addGroupBuyingOrder({
+                  openId: wxStateStore.openId,
+                  groupBuyingId: (JSON.parse(cardInfo)).id,
+                  groupBuyingOrderId: groupOrderId || undefined,
+                  mobile: loginInfo.phone,
+                  nickName: loginInfo.name,
+                })
+                console.log('addGroupBuyingOrderId----', orderId)
+                // 跳转到主页
+                router.push(`/?groupOrderId=${orderId}`)
+              }
+            },
+            // 支付取消回调函数
+            cancel(res: any) {
+              console.log(`---chooseWXPay取消，返回结果:${JSON.stringify(res)}\n`)
+            },
+            // 支付失败回调函数
+            fail(res: any) {
+              console.log(`---chooseWXPay失败，返回结果:${JSON.stringify(res)}\n`)
+            },
+          })
+        }
+        else {
+          // 抛出错误
+          console.log(`---统一下单失败，返回结果:${JSON.stringify(res)}\n`)
+        }
+      })
+      .catch((err: any) => {
+        console.log(`---统一下单失败err，返回结果:${JSON.stringify(err)}\n`)
+      })
+  }
 }
-
-// 微信相关处理逻辑
-if (!wxStateStore.openId) {
-  // 如果未存，则要通过授权，回调页面，获取code，然后获取openID，保存本地
-  getWxAuth()
-}
-
-// 初始化wx的jssdk的config
-initWxConfig()
 </script>
 
 <template>

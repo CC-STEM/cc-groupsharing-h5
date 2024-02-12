@@ -14,11 +14,15 @@ export const useWXStateStore = defineStore('wxState', {
   state: () => {
     return {
       openId: '',
+      wx: null,
     }
   },
   actions: {
     setOpenId(openId: string) {
       this.openId = openId
+    },
+    setWx(wxIns: any) {
+      this.wx = wxIns
     },
   },
 })

@@ -18,3 +18,7 @@ export function setLoginInfo(user: User) {
 export function clearLoginInfo() {
   store.clearAll()
 }
+
+export function transformDateString(time: string) {
+  return new Date(time).toLocaleDateString()
+}

@@ -4,6 +4,7 @@ import type { GroupSharingCardInfo } from '@/typing'
 import ValidCardBackImg from '@/assets/validCard.png'
 import InValidCardBackImg from '@/assets/invalidCard.png'
 import { px2vw } from '@/utils/calcStyle'
+import { transformDateString } from '@/utils/index'
 
 const props = defineProps<{ cardInfo: GroupSharingCardInfo }>()
 const curEmit = defineEmits(['detailClick'])
@@ -19,7 +20,7 @@ const backImgUrl = computed(() => props.cardInfo?.isActiveStyle ? `url(${ValidCa
         {{ props.cardInfo?.vipName }}
       </div>
       <div class="endTime">
-        {{ props.cardInfo?.endTime }} 截止
+        {{ props.cardInfo?.endTime ? transformDateString(props.cardInfo?.endTime) : '' }} 截止
       </div>
     </div>
     <div class="cardAmount">
