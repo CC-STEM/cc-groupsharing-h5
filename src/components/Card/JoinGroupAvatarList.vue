@@ -22,7 +22,7 @@ const props = defineProps<Props>()
 const realAvatarWidth = computed(() => px2vw(props.avatarWidth || 114))
 const realAvatarHeight = computed(() => px2vw(props.avatarHeight || 114))
 // const realAvatarNameLeft = computed(() => px2vw(props.avatarHeight || 57))
-const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 14))
+const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 7))
 const CONFIG_AVATAR_LIST = [Avatar1, Avatar2, Avatar3, Avatar4, Avatar5]
 
 const avatarList = computed<{ type: string, url: string }[]>(() => {

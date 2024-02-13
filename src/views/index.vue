@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, ref, watchEffect } from 'vue'
 import wx from 'weixin-js-sdk'
 
 import { useRoute, useRouter } from 'vue-router'
+import { closeToast, showLoadingToast, showToast } from 'vant'
 import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
@@ -18,7 +19,7 @@ import RightArrow from '@/assets/rightArrow.png'
 import { getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
-import { localStorage } from '@/utils/local-storage'
+// import { localStorage } from '@/utils/local-storage'
 import { useWXStateStore } from '@/stores'
 import { getLoginInfo } from '@/utils/index'
 
@@ -37,14 +38,11 @@ const groupShareUserName = computed(() => {
 
 const isSharedGroup = computed(() => {
   const query = route.query
-  if (query.groupOrderId)
+  if (query.groupBuyingOrderId)
     return true
 
   return false
 })
-
-if (route.query && route.query.groupOrderId)
-  localStorage.set('groupOrderId', route.query.groupOrderId) // TODO:后续改为跳转/StudentInfo路由时带groupOrderId参数
 
 const firstTitle = computed(() => {
   // 区分已发起拼团和未发起的情况（管理员初始配置）
@@ -136,11 +134,28 @@ let scrollIns
 
 // 发起拼团
 function handleCreateGroup() {
-  router.push('/StudentInfo')
+  // 跳转拼活动配置id
+  const groupBuyingId = curSelectedCard.value.id
+  if (groupBuyingId) {
+    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}`)
+  }
+  else {
+    console.log('当前groupBuyingId', groupBuyingId)
+    showToast('请稍后重试...')
+  }
 }
 // 参团
 function handleJoinGroup() {
-  router.push('/StudentInfo')
+  // 跳转拼活动配置id, 订单id
+  const groupBuyingId = curSelectedCard.value.id
+  const groupBuyingOrderId = route.query.groupBuyingOrderId
+  if (groupBuyingId && groupBuyingOrderId) {
+    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${groupBuyingOrderId}`)
+  }
+  else {
+    console.log('当前groupBuyingId, groupBuyingOrderId', groupBuyingId, groupBuyingOrderId)
+    showToast('请稍后重试...')
+  }
 }
 
 function changeCard(cardIndex: number) {
@@ -148,11 +163,15 @@ function changeCard(cardIndex: number) {
   curSelectedCard.value = cardList.value[cardIndex]
 }
 
+function inviteOther() {
+  showToast('请点击页面右上角 ... 发起分享')
+}
+
 watchEffect(async () => {
   const query = route.query
   console.log('routeParams', query)
-  if (query.groupOrderId) {
-    const { data: { data } } = await getSharedGroupData(query.groupOrderId as string)
+  if (query.groupBuyingOrderId) {
+    const { data: { data } } = await getSharedGroupData(query.groupBuyingOrderId as string)
     console.log('getSharedGroupData', data)
     curGroupOrderInfo.value = data
     cardList.value = [data.groupBuyingInfo].map(item => ({
@@ -181,11 +200,11 @@ watchEffect(async () => {
   }
 })
 
-watch(curSelectedCard, (newVal) => {
-  if (newVal)
-    // setGroupBuyingCardInfo(newVal)
-    localStorage.set('cardInfo', JSON.stringify(newVal))
-})
+// watch(curSelectedCard, (newVal) => {
+//   if (newVal)
+//     // setGroupBuyingCardInfo(newVal)
+//     localStorage.set('cardInfo', JSON.stringify(newVal))
+// })
 
 // 微信相关
 // 用户授权，回调，获取openID
@@ -194,8 +213,8 @@ function getWxAuth() {
   const code: string = route.query.code as string
   if (!code) {
     // 微信授权，授权后重定向到本页面
-    const localUrl = window.location.href
-    console.log(localUrl)
+    const localUrl = encodeURIComponent(window.location.href)
+    console.log('重定向到微信时url', localUrl)
     window.location.href = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${wxAppID}&redirect_uri=${localUrl}&response_type=code&scope=snsapi_base&state=STATE&connect_redirect=1#wechat_redirect`
   }
   else {
@@ -223,6 +242,11 @@ function getWxAuth() {
 
 // 初始化wx JSSDK
 function initWxConfig() {
+  showLoadingToast({
+    message: '加载中...',
+    loadingType: 'spinner',
+    duration: 0,
+  })
   // 后端获取access_token和ticket，返回签名信息，初始化wx.config
   getInitSDKAuthConfig({
     url: document.URL,
@@ -244,7 +268,7 @@ function initWxConfig() {
       })
 
       // 通过ready接口处理成功验证
-      wx.ready(() => {
+      wx.ready(async () => {
         console.log(`---初始化wx.config成功\n`)
         wxStateStore.setWx(wx)
         let shareLink = `${window.location.origin}${window.location.pathname}`
@@ -252,8 +276,8 @@ function initWxConfig() {
         if (loginInfo.name)
           shareLink += `?shareUser=${loginInfo.name}`
 
-        if (route.query.groupOrderId)
-          shareLink += `&groupOrderId=${route.query.groupOrderId}`
+        if (route.query.groupBuyingOrderId)
+          shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
 
         console.log('shareLink', shareLink)
 
@@ -266,24 +290,30 @@ function initWxConfig() {
           },
         })
 
-        // 自定义分享
-        wx.updateAppMessageShareData({
-          imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
-          link: shareLink,
-          desc: '拼团活动期间，用户可在公众号网页发起拼团',
-          title: '邀好友一起拼',
-          success() {
-            alert('设置分享成功')
-          },
-        })
-
-        wx.updateTimelineShareData({
-          imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
-          link: `${window.location.origin}${window.location.pathname}`,
-          title: '邀好友一起拼',
-          success() {
-            alert('设置分享成功')
-          },
+        Promise.all([new Promise((resolve) => {
+          // 自定义分享
+          wx.updateAppMessageShareData({
+            imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+            link: shareLink,
+            desc: '拼团活动期间，用户可在公众号网页发起拼团',
+            title: '邀好友一起拼',
+            success() {
+              console.log('设置朋友分享成功')
+              resolve(true)
+            },
+          })
+        }), new Promise((resolve) => {
+          wx.updateTimelineShareData({
+            imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+            link: shareLink,
+            title: '邀好友一起拼',
+            success() {
+              console.log('设置朋友圈分享成功')
+              resolve(true)
+            },
+          })
+        })]).then(() => {
+          closeToast()
         })
       })
 
@@ -393,9 +423,9 @@ initWxConfig()
             v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber < curSelectedCard.number"
           >
             <div v-if="curGroupOrderInfo.isInOrder" class="groupTips">
-              您已在团中！
+              您已成功加入该团！
             </div>
-            <div v-if="curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="() => { }">
+            <div v-if="curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="inviteOther">
               <div class="desc">
                 邀请好友
               </div>
@@ -922,5 +952,14 @@ initWxConfig()
 
 :deep(.van-swipe) {
   height: 100%;
+}
+
+:deep(.van-toast) {
+  font-size: 15px;
+  line-height: 20px;
+}
+
+:deep(.van-toast__text) {
+  font-size: 15px;
 }
 </style>

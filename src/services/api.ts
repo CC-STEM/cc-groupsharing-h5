@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, GetGroupSharingDataRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
+import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -76,10 +76,10 @@ export function getGroupSharingData() {
   })
 }
 
-export function getSharedGroupData(groupOrderId: string) {
+export function getSharedGroupData(groupBuyingOrderId: string) {
   return axiosIns<GetSharedGroupDataRes>({
     method: 'GET',
-    url: `/api/app/h5/myGroupBuyingOrder/${groupOrderId}`,
+    url: `/api/app/h5/myGroupBuyingOrder/${groupBuyingOrderId}`,
   })
 }
 
@@ -103,5 +103,12 @@ export function addGroupBuyingOrder(data: AddGroupBuyingOrderReq) {
     method: 'POST',
     url: `/api/app/h5/addGroupBuyingOrder`,
     data,
+  })
+}
+
+export function deleteGroupBuyingOrder(data: DeleteGroupBuyingOrderReq) {
+  return axiosIns<BaseResponse>({
+    method: 'POST',
+    url: `/api/app/h5/delGroupBuyingOrder/${data.id}`,
   })
 }

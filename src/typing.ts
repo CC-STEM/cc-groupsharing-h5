@@ -192,3 +192,7 @@ export interface MyHistoryOrderInfo {
 export type GetHistoryOrderListRes = BaseResponse & {
   data: MyHistoryOrderInfo[]
 }
+
+export interface DeleteGroupBuyingOrderReq {
+  id: string
+}

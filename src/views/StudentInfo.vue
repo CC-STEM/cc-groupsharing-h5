@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import PageView from '@/components/PageView.vue'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
 import { useWXStateStore } from '@/stores'
 import { getLoginInfo } from '@/utils/index'
 import { addGroupBuyingOrder, addStudentInfo, wxPrepay } from '@/services/api'
-import { localStorage } from '@/utils/local-storage'
 
 const router = useRouter()
+const route = useRoute()
 const studentInfo = ref<StudentInfoType>({
   childrenName: '',
   school: '',
@@ -128,13 +128,14 @@ async function handlePay() {
           // 支付成功后生成拼团业务订单
           // 临时测试
           const loginInfo = getLoginInfo()
-          const cardInfo = localStorage.get('cardInfo')
-          const groupOrderId = localStorage.get('groupOrderId')
+          const query = route.query
+          const groupBuyingId = query.groupBuyingId
+          const groupBuyingOrderId = query.groupBuyingOrderId
 
           console.log('loginInfo', loginInfo)
           console.log('openId', wxStateStore.openId)
-          console.log('cardInfo', cardInfo)
-          console.log('groupOrderId', groupOrderId)
+          console.log('groupBuyingId', groupBuyingId)
+          console.log('groupBuyingOrderId', groupBuyingOrderId)
 
           wxStateStore.wx.chooseWXPay({
             timestamp: Number(data.timeStamp), // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
@@ -146,17 +147,17 @@ async function handlePay() {
               console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
               const loginInfo = getLoginInfo()
               // 支付成功后生成拼团业务订单
-              if (loginInfo && wxStateStore.openId && cardInfo) {
+              if (loginInfo && wxStateStore.openId && groupBuyingId) {
                 const { data: { data: orderId } } = await addGroupBuyingOrder({
                   openId: wxStateStore.openId,
-                  groupBuyingId: (JSON.parse(cardInfo)).id,
-                  groupBuyingOrderId: groupOrderId || undefined,
+                  groupBuyingId: Number(groupBuyingId as string),
+                  groupBuyingOrderId: groupBuyingOrderId ? Number(groupBuyingOrderId as string) : undefined,
                   mobile: loginInfo.phone,
                   nickName: loginInfo.name,
                 })
                 console.log('addGroupBuyingOrderId----', orderId)
                 // 跳转到主页
-                router.push(`/?groupOrderId=${orderId}`)
+                router.push(`/?groupBuyingOrderId=${orderId}`)
               }
             },
             // 支付取消回调函数
