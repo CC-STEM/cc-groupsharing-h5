@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { showToast } from 'vant'
 import PageView from '@/components/PageView.vue'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
@@ -154,10 +155,20 @@ async function handlePay() {
                   groupBuyingOrderId: groupBuyingOrderId ? Number(groupBuyingOrderId as string) : undefined,
                   mobile: loginInfo.phone,
                   nickName: loginInfo.name,
+                  status: Number(query.buyStatus as string),
                 })
                 console.log('addGroupBuyingOrderId----', orderId)
-                // 跳转到主页
-                router.push(`/?groupBuyingOrderId=${orderId}`)
+                console.log('query.buyStatus', query.buyStatus)
+                // 跳转到主页 TODO: 如果是单买则不带订单id跳转
+                if (query.buyStatus === '0') {
+                  showToast('购买成功，前往我的订单查看')
+                  router.push(`/?groupBuyingOrderId=${orderId}`)
+                }
+
+                if (query.buyStatus === '1') {
+                  showToast('购买成功，前往我的订单查看')
+                  router.push('/')
+                }
               }
             },
             // 支付取消回调函数

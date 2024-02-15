@@ -132,25 +132,26 @@ let scrollIns
 //   scrollIns.scrollTo(-(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth) / 2, 0)
 // })
 
-// 发起拼团
-function handleCreateGroup() {
+// 0 发起拼团 or 1 单独购买
+function handleBuy(buyStatus: number) {
   // 跳转拼活动配置id
   const groupBuyingId = curSelectedCard.value.id
   if (groupBuyingId) {
-    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}`)
+    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&buyStatus=${buyStatus}`)
   }
   else {
     console.log('当前groupBuyingId', groupBuyingId)
     showToast('请稍后重试...')
   }
 }
+
 // 参团
 function handleJoinGroup() {
   // 跳转拼活动配置id, 订单id
   const groupBuyingId = curSelectedCard.value.id
   const groupBuyingOrderId = route.query.groupBuyingOrderId
   if (groupBuyingId && groupBuyingOrderId) {
-    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${groupBuyingOrderId}`)
+    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${groupBuyingOrderId}&buyStatus=0`)
   }
   else {
     console.log('当前groupBuyingId, groupBuyingOrderId', groupBuyingId, groupBuyingOrderId)
@@ -383,15 +384,15 @@ initWxConfig()
             <div class="price">
               ￥{{ curSelectedCard?.price }}
             </div>
-            <div class="desc">
+            <div class="desc" @click="handleBuy(1)">
               单独购买
             </div>
           </div>
-          <div class="createGroupBtn" @click="handleCreateGroup">
+          <div class="createGroupBtn">
             <div class="price">
               ￥{{ curSelectedCard?.groupBuyingPrice }}
             </div>
-            <div class="desc">
+            <div class="desc" @click="handleBuy(0)">
               发起拼团
             </div>
           </div>

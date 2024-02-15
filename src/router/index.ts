@@ -20,10 +20,16 @@ router.beforeEach((_to, _from, next) => {
     return
   }
 
-  if (loginInfo?.token)
+  const toQuery = _to.query
+  console.log('_to', _to)
+  console.log('_from', _from)
+  if (loginInfo?.token) {
     next()
-  else
-    next('/PhoneLogin')
+  }
+  else {
+    const toLoginPath = `/PhoneLogin?${Object.entries(toQuery).map(item => `${item[0]}=${item[1]}`).join('&')}`
+    next(toLoginPath) // 这里要带上原参数
+  }
 })
 
 router.afterEach(() => {

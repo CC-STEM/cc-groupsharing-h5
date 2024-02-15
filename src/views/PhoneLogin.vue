@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import PageView from '@/components/PageView.vue'
 import { getSMSCode, loginByPhone } from '@/services/index'
 import { setLoginInfo } from '@/utils'
 
 const router = useRouter()
+const route = useRoute()
 const phone = ref('')
 const code = ref('')
 function onSubmit(values) {
@@ -47,7 +48,9 @@ async function handleLogin() {
   })
   setLoginInfo(data)
   console.log('handleLogin', data, resCode)
-  router.push('/')
+  console.log('route', route)
+  const toPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
+  router.push(`/?${toPath}`) // 带上原参数
 }
 </script>
 

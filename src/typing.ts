@@ -163,6 +163,7 @@ export interface AddGroupBuyingOrderReq {
   mobile: string
   nickName: string
   openId: string
+  status: number
 }
 
 export type AddGroupBuyingOrderRes = BaseResponse & {
