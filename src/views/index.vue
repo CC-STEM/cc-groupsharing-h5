@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import wx from 'weixin-js-sdk'
 
 import { useRoute, useRouter } from 'vue-router'
 import { closeToast, showLoadingToast, showToast } from 'vant'
-import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem } from '@/typing'
+import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem, StudentInfoType } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
 import CardDescDetail from '@/components/Card/CardDescDetail.vue'
+import StudentInfoForm from '@/components/StudentInfoForm.vue'
 
 import play1 from '@/assets/play1.png'
 import play2 from '@/assets/play2.png'
@@ -16,7 +17,7 @@ import play3 from '@/assets/play3.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
-import { getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId } from '@/services'
+import { addGroupBuyingOrder, addStudentInfo, getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
 // import { localStorage } from '@/utils/local-storage'
@@ -30,6 +31,7 @@ const route = useRoute()
 const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
+const showAddStudentInfoDialog = ref(false)
 
 const groupShareUserName = computed(() => {
   const query = route.query
@@ -66,6 +68,7 @@ const cardList = ref<GroupSharingCardInfo[]>([
 // const curSharedGroupInfo = ref()
 
 const curSelectedCard = ref<GroupSharingCardInfo | null>(null)
+const curBuyStatus = ref<number>(0) // 0 拼团 1 单独买
 
 // const scrollRef = ref(null)
 const showCardDetailSheetOption = ref({
@@ -109,54 +112,125 @@ function clickDetail(curCard: GroupSharingCardInfo) {
   curSelectedCard.value = curCard
 }
 
-let scrollIns
+// 支付
+async function handlePay(studentInfo: StudentInfoType) {
+  // 补充用户信息
+  try {
+    const res = await addStudentInfo({
+      ...studentInfo,
+    })
+    console.log('addStudentInfo', res)
+  }
+  catch (e) {
+    console.log('addStudentInfo err', e)
+  }
+  if (wx && curSelectedCard.value) {
+    // 先是后端用户下单，下完单之后，前端再调取微信支付
+    wxPrepay({ openId: wxStateStore.openId, payAmount: curBuyStatus.value === 0 ? curSelectedCard.value.groupBuyingPrice : curSelectedCard.value.price, payDes: '测试支付' })
+      .then(async (res) => {
+        console.log('wxPrepay', res)
+        const { data: { code, data } } = res
+        if (code === 200) {
+          console.log(`---统一下单成功，返回结果:${JSON.stringify(data)}\n`)
 
-// onMounted(() => {
-//   console.log('scrollRef.value', scrollRef.value)
-//   scrollIns = new BScroll(scrollRef.value, {
-//     probeType: 3,
-//     scrollX: true,
-//     click: true,
-//   })
+          // 支付成功后生成拼团业务订单
+          // 临时测试
+          const loginInfo = getLoginInfo()
+          const query = route.query
+          const groupBuyingId = curSelectedCard.value.id
+          const groupBuyingOrderId = query.groupBuyingOrderId
 
-//   scrollIns.on('scrollStart', () => {
-//     console.log('scrollStart-')
-//   })
-//   scrollIns.on('scroll', ({ y }) => {
-//     console.log('scrolling-', y)
-//   })
-//   scrollIns.on('scrollEnd', (pos) => {
-//     console.log(pos)
-//   })
-//   console.log('scroll', -(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth))
-//   scrollIns.scrollTo(-(document.querySelector('.subContainer').clientWidth - document.querySelector('.cardContainer').clientWidth) / 2, 0)
-// })
+          console.log('loginInfo', loginInfo)
+          console.log('openId', wxStateStore.openId)
+          console.log('groupBuyingId', groupBuyingId)
+          console.log('groupBuyingOrderId', groupBuyingOrderId)
+
+          wx.chooseWXPay({
+            timestamp: Number(data.timeStamp), // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+            nonceStr: data.nonceStr, // 支付签名随机串，不长于 32 位
+            package: data.packageVal, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+            signType: data.signType, // 微信支付V3的传入RSA,微信支付V2的传入格式与V2统一下单的签名格式保持一致
+            paySign: data.paySign, // 支付签名
+            success: async (res: any) => {
+              console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
+              const loginInfo = getLoginInfo()
+              // 支付成功后生成拼团业务订单
+              if (loginInfo && wxStateStore.openId && groupBuyingId) {
+                const { data: { data: orderId } } = await addGroupBuyingOrder({
+                  openId: wxStateStore.openId,
+                  groupBuyingId: Number(groupBuyingId as string),
+                  groupBuyingOrderId: groupBuyingOrderId ? Number(groupBuyingOrderId as string) : undefined,
+                  mobile: loginInfo.phone,
+                  nickName: loginInfo.name,
+                  status: curBuyStatus.value,
+                })
+                console.log('addGroupBuyingOrderId----', orderId)
+                console.log('curBuyStatus', curBuyStatus.value)
+                // 跳转到主页 TODO: 如果是单买则不带订单id跳转
+                if (curBuyStatus.value === 0) {
+                  showToast('购买成功，前往我的订单查看')
+                  router.push(`/?groupBuyingOrderId=${orderId}`)
+                }
+
+                if (curBuyStatus.value === 1) {
+                  showToast('购买成功，前往我的订单查看')
+                  router.push('/')
+                }
+                showAddStudentInfoDialog.value = false
+              }
+            },
+            // 支付取消回调函数
+            cancel(res: any) {
+              console.log(`---chooseWXPay取消，返回结果:${JSON.stringify(res)}\n`)
+            },
+            // 支付失败回调函数
+            fail(res: any) {
+              console.log(`---chooseWXPay失败，返回结果:${JSON.stringify(res)}\n`)
+            },
+          })
+        }
+        else {
+          // 抛出错误
+          console.log(`---统一下单失败，返回结果:${JSON.stringify(res)}\n`)
+        }
+      })
+      .catch((err: any) => {
+        console.log(`---统一下单失败err，返回结果:${JSON.stringify(err)}\n`)
+      })
+  }
+}
 
 // 0 发起拼团 or 1 单独购买
 function handleBuy(buyStatus: number) {
+  showAddStudentInfoDialog.value = true
+  curBuyStatus.value = buyStatus
+
   // 跳转拼活动配置id
-  const groupBuyingId = curSelectedCard.value.id
-  if (groupBuyingId) {
-    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&buyStatus=${buyStatus}`)
-  }
-  else {
-    console.log('当前groupBuyingId', groupBuyingId)
-    showToast('请稍后重试...')
-  }
+  // const groupBuyingId = curSelectedCard.value.id
+  // if (groupBuyingId) {
+  //   router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&buyStatus=${buyStatus}`)
+  // }
+  // else {
+  //   console.log('当前groupBuyingId', groupBuyingId)
+  //   showToast('请稍后重试...')
+  // }
 }
 
 // 参团
 function handleJoinGroup() {
+  showAddStudentInfoDialog.value = true
+  curBuyStatus.value = 0
+
   // 跳转拼活动配置id, 订单id
-  const groupBuyingId = curSelectedCard.value.id
-  const groupBuyingOrderId = route.query.groupBuyingOrderId
-  if (groupBuyingId && groupBuyingOrderId) {
-    router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${groupBuyingOrderId}&buyStatus=0`)
-  }
-  else {
-    console.log('当前groupBuyingId, groupBuyingOrderId', groupBuyingId, groupBuyingOrderId)
-    showToast('请稍后重试...')
-  }
+  // const groupBuyingId = curSelectedCard.value.id
+  // const groupBuyingOrderId = route.query.groupBuyingOrderId
+  // if (groupBuyingId && groupBuyingOrderId) {
+  //   router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${groupBuyingOrderId}&buyStatus=0`)
+  // }
+  // else {
+  //   console.log('当前groupBuyingId, groupBuyingOrderId', groupBuyingId, groupBuyingOrderId)
+  //   showToast('请稍后重试...')
+  // }
 }
 
 function changeCard(cardIndex: number) {
@@ -193,19 +267,8 @@ watchEffect(async () => {
       shopName.value = cardList.value[0].storeName
       curSelectedCard.value = cardList.value[0]
     }
-
-    nextTick(() => {
-      if (scrollIns)
-        scrollIns.refresh()
-    })
   }
 })
-
-// watch(curSelectedCard, (newVal) => {
-//   if (newVal)
-//     // setGroupBuyingCardInfo(newVal)
-//     localStorage.set('cardInfo', JSON.stringify(newVal))
-// })
 
 // 微信相关
 // 用户授权，回调，获取openID
@@ -260,7 +323,7 @@ function initWxConfig() {
       // 官方参考文档：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html#1
       // 初始化验证jssdk
       wx.config({
-        debug: true, // 这里一般在测试阶段先用ture，等打包给后台的时候就改回false,
+        debug: false, // 这里一般在测试阶段先用ture，等打包给后台的时候就改回false,
         appId: wxAppID, // 必填，公众号的唯一标识
         timestamp: Number(data.timestamp), // 必填，生成签名的时间戳
         nonceStr: data.nonceStr, // 必填，生成签名的随机串
@@ -497,6 +560,12 @@ initWxConfig()
       v-if="curSelectedCard" v-model:show-option="showCardDetailSheetOption"
       :cur-selected-card="curSelectedCard"
     />
+    <van-dialog
+      v-model:show="showAddStudentInfoDialog" width="100%" :show-confirm-button="false"
+      :show-cancel-button="false"
+    >
+      <StudentInfoForm @handle-click-pay="handlePay" />
+    </van-dialog>
   </div>
 </template>
 
@@ -955,12 +1024,9 @@ initWxConfig()
   height: 100%;
 }
 
-:deep(.van-toast) {
-  font-size: 15px;
-  line-height: 20px;
-}
-
-:deep(.van-toast__text) {
-  font-size: 15px;
+:deep(.van-dialog) {
+  overflow-y: scroll;
+  margin-top: 30px;
+  height: 90%;
 }
 </style>

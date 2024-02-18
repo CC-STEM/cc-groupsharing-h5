@@ -1,7 +1,7 @@
 import type { ORDER_STATUS_ENUM } from '@/typing';
 <script setup lang="ts">
 import { computed } from 'vue'
-import { closeToast, showLoadingToast, showToast } from 'vant'
+import { closeToast, showLoadingToast, showSuccessToast, showToast } from 'vant'
 import type { MyHistoryOrderInfo } from '@/typing'
 import { ORDER_OP_TEXT, ORDER_OP_TEXT_COLOR, ORDER_STATUS_CN_MAP, ORDER_STATUS_ENUM } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
@@ -66,8 +66,8 @@ async function handleOp() {
       })
     }
   }
-  // 当前订单为已拼成，提示去使用
-  if (props.orderInfo.status === ORDER_STATUS_ENUM.COMPLETED)
+  // 当前订单为已拼成或已单买，提示去使用
+  if ([ORDER_STATUS_ENUM.COMPLETED, ORDER_STATUS_ENUM.SINGLE_BUY].includes(props.orderInfo.status))
     showToast('请前往门店使用')
 
   // 当前订单为已失效，操作删除
@@ -75,7 +75,7 @@ async function handleOp() {
     await deleteGroupBuyingOrder({
       id: props.orderInfo.id,
     })
-    showToast('订单删除成功')
+    showSuccessToast('订单删除成功')
   }
 }
 </script>
@@ -92,9 +92,9 @@ async function handleOp() {
           :avatar-margin="3" :avatar-height="66" :avatar-width="66" :number="curCard.number"
           :current-number="props.orderInfo.currentNumber"
         />
-        <div class="orderStatus">
-          {{ orderStatus }}
-        </div>
+      </div>
+      <div class="orderStatus">
+        {{ orderStatus }}
       </div>
       <div class="opBtn" @click="handleOp">
         {{ orderBtnText }}
@@ -115,35 +115,42 @@ async function handleOp() {
     // width: 656px;
     height: 135px;
     display: flex;
-    justify-content: space-around;
+    // justify-content: space-around;
     align-items: center;
+    position: relative;
 
     .opAvatar {
       width: auto;
       display: flex;
       align-items: center;
+      position: absolute;
+      left: 10px;
+    }
 
-      .orderStatus {
-        font-size: 30px;
-        font-family: PingFang SC;
-        font-weight: 800;
-        color: v-bind(orderTextColor);
-      }
+    .orderStatus {
+      font-size: 30px;
+      font-family: PingFang SC;
+      font-weight: 800;
+      color: v-bind(orderTextColor);
+      position: absolute;
+      right: 200px;
     }
 
     .opBtn {
       width: 183px;
       height: 76px;
-      background: v-bind("props.orderInfo.status === ORDER_STATUS_ENUM.COMPLETED || props.orderInfo.status === ORDER_STATUS_ENUM.UNCOMPLETED ? '#000000' : '#FFFFFF'");
+      background: v-bind("[ORDER_STATUS_ENUM.COMPLETED, ORDER_STATUS_ENUM.UNCOMPLETED, ORDER_STATUS_ENUM.SINGLE_BUY].includes(props.orderInfo.status) ? '#000000' : '#FFFFFF'");
       border-radius: 38px;
       font-size: 30px;
       font-family: PingFang SC;
       font-weight: 800;
-      color: v-bind("props.orderInfo.status === ORDER_STATUS_ENUM.COMPLETED || props.orderInfo.status === ORDER_STATUS_ENUM.UNCOMPLETED ? '#FFFFFF' : '#000000'");
+      color: v-bind("[ORDER_STATUS_ENUM.COMPLETED, ORDER_STATUS_ENUM.UNCOMPLETED, ORDER_STATUS_ENUM.SINGLE_BUY].includes(props.orderInfo.status) ? '#FFFFFF' : '#000000'");
       display: flex;
       justify-content: center;
       align-items: center;
-      border: v-bind("props.orderInfo.status === ORDER_STATUS_ENUM.INVALID ? '2px solid #D1D1D1' : 'none'")
+      border: v-bind("props.orderInfo.status === ORDER_STATUS_ENUM.INVALID ? '2px solid #D1D1D1' : 'none'");
+      position: absolute;
+      right: 10px;
     }
   }
 }
