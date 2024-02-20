@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { showDialog } from 'vant'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
 
 const curEmits = defineEmits(['handleClickPay'])
+const myForm = ref(null)
 
 const studentInfo = ref<StudentInfoType>({
   childrenName: '',
@@ -14,6 +16,8 @@ const studentInfo = ref<StudentInfoType>({
   isKnowedCc: 0,
   isLearnedCode: 0,
 })
+
+const phonePattern = /^[1][3,4,5,6,7,8,9][0-9]{9}$/
 
 const classTimeResult = ref('')
 const knownedCCResult = ref('')
@@ -93,8 +97,20 @@ function onLearningCodeConfirm({ selectedValues, selectedOptions }) {
   studentInfo.value.isLearnedCode = selectedValues[0]
 }
 
-function toPay() {
-  curEmits('handleClickPay', studentInfo.value)
+async function toPay() {
+  // 检查当前form
+  try {
+    await myForm.value.validate()
+    curEmits('handleClickPay', studentInfo.value)
+  }
+  catch (e) {
+    console.log('e', e)
+    showDialog({
+      message: '请填写完成学生信息',
+    }).then(() => {
+      // on close
+    })
+  }
 }
 </script>
 
@@ -109,13 +125,19 @@ function toPay() {
         <img class="tipImg" :src="TipImg" alt="">
       </div>
     </div>
-    <van-form @submit="onSubmit">
+    <van-form ref="myForm" :show-error="true" @submit="onSubmit">
       <van-cell-group inset>
-        <van-field v-model="studentInfo.childrenName" name="孩子姓名" label="孩子姓名" placeholder="孩子姓名" />
-        <van-field v-model="studentInfo.school" name="学校名称" label="学校名称" placeholder="学校名称" />
+        <van-field
+          v-model="studentInfo.childrenName" name="孩子姓名" label="孩子姓名" placeholder="孩子姓名"
+          :rules="[{ required: true, message: '' }]"
+        />
+        <van-field
+          v-model="studentInfo.school" name="学校名称" label="学校名称" placeholder="学校名称"
+          :rules="[{ required: true, message: '' }]"
+        />
         <van-field
           v-model="studentInfo.birth" is-link readonly label="出生日期" placeholder="出生日期"
-          @click="showBirthdatePicker = true"
+          :rules="[{ required: true, message: '' }]" @click="showBirthdatePicker = true"
         />
         <van-popup v-model:show="showBirthdatePicker" round position="bottom">
           <!-- <van-picker :columns="columns" @cancel="showPicker = false" @confirm="onConfirm" /> -->
@@ -124,10 +146,13 @@ function toPay() {
             @confirm="onBirthdateConfirm"
           />
         </van-popup>
-        <van-field v-model="studentInfo.contact" name="家长联系方式" label="家长联系方式" placeholder="家长联系方式" />
+        <van-field
+          v-model="studentInfo.contact" name="家长联系方式" label="家长联系方式" placeholder="家长联系方式"
+          :rules="[{ pattern: phonePattern, message: '格式异常' }]"
+        />
         <van-field
           v-model="classTimeResult" is-link readonly label="意向上课时间" placeholder="意向上课时间"
-          @click="showClassTimePicker = true"
+          :rules="[{ required: true, message: '' }]" @click="showClassTimePicker = true"
         />
         <van-popup v-model:show="showClassTimePicker" round position="bottom">
           <van-picker
@@ -136,13 +161,16 @@ function toPay() {
           />
           <!-- <van-time-picker type="time" title="选择时间" @cancel="showClassTimePicker = false" @confirm="onClassTimeConfirm" /> -->
         </van-popup>
-        <van-field v-model="knownedCCResult" is-link readonly label="如何知晓CC编程" @click="showKnownedCCPicker = true" />
+        <van-field
+          v-model="knownedCCResult" is-link readonly label="如何知晓CC编程" placeholder="如何知晓CC编程"
+          :rules="[{ required: true, message: '' }]" @click="showKnownedCCPicker = true"
+        />
         <van-popup v-model:show="showKnownedCCPicker" round position="bottom">
           <van-picker :columns="HowKnowCCOptions" @cancel="showKnownedCCPicker = false" @confirm="onKnownedCCConfirm" />
         </van-popup>
         <van-field
-          v-model="learnedCodingResult" is-link readonly label="是否学过编程"
-          @click="showLearnedCodingPicker = true"
+          v-model="learnedCodingResult" is-link readonly label="是否学过编程" placeholder="是否学过编程"
+          :rules="[{ required: true, message: '' }]" @click="showLearnedCodingPicker = true"
         />
         <van-popup v-model:show="showLearnedCodingPicker" round position="bottom">
           <van-picker

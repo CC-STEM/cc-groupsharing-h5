@@ -22,7 +22,7 @@ import { addGroupBuyingOrder, addStudentInfo, getGroupSharingData, getInitSDKAut
 // import { useGroupStateStore } from '@/stores'
 // import { localStorage } from '@/utils/local-storage'
 import { useWXStateStore } from '@/stores'
-import { getLoginInfo } from '@/utils/index'
+import { clearLoginInfo, getLoginInfo } from '@/utils/index'
 
 const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
@@ -105,6 +105,11 @@ const playList = computed<PlayItem[]>(() => {
     subTitle: '',
   }]
 })
+
+function logout() {
+  clearLoginInfo()
+  router.push('/PhoneLogin')
+}
 
 function clickDetail(curCard: GroupSharingCardInfo) {
   console.log('click---')
@@ -524,6 +529,9 @@ initWxConfig()
           <div class="orders" @click="() => { router.push('/Order') }">
             我的拼团订单 <img class="rightArrow" :src="RightArrow" alt="">
           </div>
+          <div class="logout" @click="logout">
+            退出
+          </div>
         </div>
         <div class="playContent">
           <GroupPlayItem
@@ -561,8 +569,8 @@ initWxConfig()
       :cur-selected-card="curSelectedCard"
     />
     <van-dialog
-      v-model:show="showAddStudentInfoDialog" width="100%" :show-confirm-button="false"
-      :show-cancel-button="false"
+      v-model:show="showAddStudentInfoDialog" :close-on-click-overlay="true" width="100%"
+      :show-confirm-button="false" :show-cancel-button="false"
     >
       <StudentInfoForm @handle-click-pay="handlePay" />
     </van-dialog>
@@ -944,6 +952,18 @@ initWxConfig()
             top: 50%;
             transform: translateY(-50%);
           }
+        }
+
+        .logout {
+          text-align: center;
+          width: 82px;
+          height: 39px;
+          background: #141414;
+          border-radius: 20px;
+          font-size: 26px;
+          font-family: PingFang SC;
+          font-weight: bold;
+          color: #FFFFFF;
         }
       }
 
