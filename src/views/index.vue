@@ -75,6 +75,32 @@ const showCardDetailSheetOption = ref({
   show: false,
 })
 
+const shareInfo = computed(() => {
+  let shareLink = `${window.location.origin}${window.location.pathname}`
+  const loginInfo = getLoginInfo()
+  if (loginInfo.name)
+    shareLink += `?shareUser=${loginInfo.name}`
+
+  if (route.query.groupBuyingOrderId)
+    shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
+
+  console.log('shareLink', shareLink)
+  if (curSelectedCard.value) {
+    return {
+      imgUrl: curSelectedCard.value.shareImgUrl,
+      link: shareLink,
+      desc: curSelectedCard.value.shareSubTitle, // subTitle
+      title: curSelectedCard.value.shareTitle, // title
+    }
+  }
+  return {
+    imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+    link: shareLink,
+    desc: '拼团活动期间，用户可在公众号网页发起拼团', // subTitle
+    title: '邀好友一起拼', // title
+  }
+})
+
 const playList = computed<PlayItem[]>(() => {
   if (curSelectedCard.value) {
     return [{
@@ -275,6 +301,30 @@ watchEffect(async () => {
   }
 })
 
+watch(shareInfo, (newVal) => {
+  if (newVal && wx) {
+    console.log('newShareInfo', newVal)
+    Promise.all([new Promise((resolve) => {
+      // 自定义分享
+      wx.updateAppMessageShareData({
+        ...shareInfo.value,
+        success() {
+          console.log('设置朋友分享成功')
+          resolve(true)
+        },
+      })
+    }), new Promise((resolve) => {
+      wx.updateTimelineShareData({
+        ...shareInfo.value,
+        success() {
+          console.log('设置朋友圈分享成功')
+          resolve(true)
+        },
+      })
+    })])
+  }
+})
+
 // 微信相关
 // 用户授权，回调，获取openID
 function getWxAuth() {
@@ -362,10 +412,7 @@ function initWxConfig() {
         Promise.all([new Promise((resolve) => {
           // 自定义分享
           wx.updateAppMessageShareData({
-            imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
-            link: shareLink,
-            desc: '拼团活动期间，用户可在公众号网页发起拼团',
-            title: '邀好友一起拼',
+            ...shareInfo.value,
             success() {
               console.log('设置朋友分享成功')
               resolve(true)
@@ -373,9 +420,7 @@ function initWxConfig() {
           })
         }), new Promise((resolve) => {
           wx.updateTimelineShareData({
-            imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
-            link: shareLink,
-            title: '邀好友一起拼',
+            ...shareInfo.value,
             success() {
               console.log('设置朋友圈分享成功')
               resolve(true)
@@ -547,17 +592,7 @@ initWxConfig()
           </div>
         </div>
         <div class="ruleContent">
-          1．发团：拼团活动期间，用户可在微信公众号、小程序等发起拼团。
-          <br>
-          2．参团：参加朋友发起的拼团。
-          <br>
-          3．限量：每个拼团活动进行期间，每位用户限参团一次。若拼团失败后可重新开团或参团。多个拼团在规定时间内满足拼团成功，视第一个完成的拼团订单为有效订单。
-          <br>
-          4．拼团人数：拼团人数可大于拼团要求人数。即拼团成功后，新参与者可继续参与拼团，直到倒计时结束。
-          <br>
-          5．成功：规定时间内团购人数满足拼团要求人数（包括团长），视为拼团成功。
-          <br>
-          6．失败：逾期人数未满足要求人数即为拼团失败，系统将发起退款，退款将于1—5个工作日原路返回。
+          <img v-if="curSelectedCard" class="ruleImg" :src="curSelectedCard.rules" alt="">
         </div>
       </div>
       <div class="contentFooter">
@@ -1013,10 +1048,16 @@ initWxConfig()
 
       .ruleContent {
         width: 648px;
-        font-size: 24px;
-        font-family: PingFang SC;
-        font-weight: 400;
-        color: #666666;
+        overflow-y: scroll;
+
+        // font-size: 24px;
+        // font-family: PingFang SC;
+        // font-weight: 400;
+        // color: #666666;
+        .ruleImg {
+          width: 100%;
+          height: auto
+        }
       }
     }
 
