@@ -27,8 +27,8 @@ async function handleOp() {
     if (wxStateStore.wx) {
       let shareLink = `${window.location.origin}/groupsharing`
       const loginInfo = getLoginInfo()
-      if (loginInfo.name)
-        shareLink += `?shareUser=${loginInfo.name}`
+      if (loginInfo?.phone)
+        shareLink += `?shareUser=${loginInfo.phone}`
 
       if (props.orderInfo.id)
         shareLink += `&groupBuyingOrderId=${props.orderInfo.id}`

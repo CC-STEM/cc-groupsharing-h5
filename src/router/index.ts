@@ -6,6 +6,7 @@ import 'nprogress/nprogress.css'
 import { getLoginInfo } from '@/utils/index'
 
 const LOGIN_PATH = '/PhoneLogin'
+const HOME_PATH = '/'
 
 NProgress.configure({ showSpinner: true, parent: '#app' })
 const router = createRouter({
@@ -23,12 +24,17 @@ router.beforeEach((_to, _from, next) => {
   const toQuery = _to.query
   console.log('_to', _to)
   console.log('_from', _from)
-  if (loginInfo?.token) {
+  if (_to.path === HOME_PATH) {
     next()
   }
   else {
-    const toLoginPath = `/PhoneLogin?${Object.entries(toQuery).map(item => `${item[0]}=${item[1]}`).join('&')}`
-    next(toLoginPath) // 这里要带上原参数
+    if (loginInfo?.token) {
+      next()
+    }
+    else {
+      const toLoginPath = `/PhoneLogin?${Object.entries(toQuery).map(item => `${item[0]}=${item[1]}`).join('&')}`
+      next(toLoginPath) // 这里要带上原参数
+    }
   }
 })
 

@@ -3,11 +3,7 @@ import type { GridItem } from 'vant';
 import { computed } from 'vue'
 import { px2vw } from '@/utils/calcStyle'
 import AddImg from '@/assets/add.png'
-import Avatar1 from '@/assets/pic1.jpg'
-import Avatar2 from '@/assets/pic2.jpg'
-import Avatar3 from '@/assets/pic5.jpg'
-import Avatar4 from '@/assets/pic3.jpg'
-import Avatar5 from '@/assets/pic4.jpg'
+import IPAvatar from '@/assets/ip.png'
 
 interface Props {
   // avatarList: Avatar[]
@@ -23,7 +19,7 @@ const realAvatarWidth = computed(() => px2vw(props.avatarWidth || 114))
 const realAvatarHeight = computed(() => px2vw(props.avatarHeight || 114))
 // const realAvatarNameLeft = computed(() => px2vw(props.avatarHeight || 57))
 const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 7))
-const CONFIG_AVATAR_LIST = [Avatar1, Avatar2, Avatar3, Avatar4, Avatar5]
+// const CONFIG_AVATAR_LIST = [Avatar1, Avatar2, Avatar3, Avatar4, Avatar5]
 
 const avatarList = computed<{ type: string, url: string }[]>(() => {
   const hasAvatarNum = props.currentNumber || 0
@@ -32,7 +28,7 @@ const avatarList = computed<{ type: string, url: string }[]>(() => {
   for (let i = 0; i < hasAvatarNum; i++) {
     finalList.push({
       type: 'AVATAR',
-      url: CONFIG_AVATAR_LIST[i],
+      url: IPAvatar,
     })
   }
   for (let j = 0; j < addNum; j++) {

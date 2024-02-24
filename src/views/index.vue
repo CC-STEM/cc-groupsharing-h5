@@ -32,10 +32,12 @@ const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
 const showAddStudentInfoDialog = ref(false)
+const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
 
 const groupShareUserName = computed(() => {
   const query = route.query
-  return query.shareUser || ''
+  // 手机号需只保留后四位
+  return query.shareUser.slice(7) || ''
 })
 
 const isSharedGroup = computed(() => {
@@ -78,8 +80,8 @@ const showCardDetailSheetOption = ref({
 const shareInfo = computed(() => {
   let shareLink = `${window.location.origin}${window.location.pathname}`
   const loginInfo = getLoginInfo()
-  if (loginInfo.name)
-    shareLink += `?shareUser=${loginInfo.name}`
+  if (loginInfo?.phone)
+    shareLink += `?shareUser=${loginInfo.phone}`
 
   if (route.query.groupBuyingOrderId)
     shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
@@ -184,15 +186,14 @@ async function handlePay(studentInfo: StudentInfoType) {
             paySign: data.paySign, // 支付签名
             success: async (res: any) => {
               console.log(`---chooseWXPay成功，返回结果:${JSON.stringify(res)}\n`)
-              const loginInfo = getLoginInfo()
               // 支付成功后生成拼团业务订单
               if (loginInfo && wxStateStore.openId && groupBuyingId) {
                 const { data: { data: orderId } } = await addGroupBuyingOrder({
                   openId: wxStateStore.openId,
                   groupBuyingId: Number(groupBuyingId as string),
                   groupBuyingOrderId: groupBuyingOrderId ? Number(groupBuyingOrderId as string) : undefined,
-                  mobile: loginInfo.phone,
-                  nickName: loginInfo.name,
+                  mobile: query.shareUser as string,
+                  nickName: '',
                   status: curBuyStatus.value,
                 })
                 console.log('addGroupBuyingOrderId----', orderId)
@@ -200,12 +201,12 @@ async function handlePay(studentInfo: StudentInfoType) {
                 // 跳转到主页 TODO: 如果是单买则不带订单id跳转
                 if (curBuyStatus.value === 0) {
                   showToast('购买成功，前往我的订单查看')
-                  router.push(`/?groupBuyingOrderId=${orderId}`)
+                  router.push(`/?groupBuyingOrderId=${orderId}&shareUser=${query.shareUser}`)
                 }
 
                 if (curBuyStatus.value === 1) {
                   showToast('购买成功，前往我的订单查看')
-                  router.push('/')
+                  router.push(`/?shareUser=${query.shareUser}`)
                 }
                 showAddStudentInfoDialog.value = false
               }
@@ -233,6 +234,13 @@ async function handlePay(studentInfo: StudentInfoType) {
 
 // 0 发起拼团 or 1 单独购买
 function handleBuy(buyStatus: number) {
+  // 检查当前是否有登录态
+  const loginInfo = getLoginInfo()
+  if (!(loginInfo?.token)) {
+    router.push(`/PhoneLogin?${curPath}`)
+    return
+  }
+
   showAddStudentInfoDialog.value = true
   curBuyStatus.value = buyStatus
 
@@ -249,6 +257,12 @@ function handleBuy(buyStatus: number) {
 
 // 参团
 function handleJoinGroup() {
+  // 检查当前是否有登录态
+  const loginInfo = getLoginInfo()
+  if (!(loginInfo?.token)) {
+    router.push(`/PhoneLogin?${curPath}`)
+    return
+  }
   showAddStudentInfoDialog.value = true
   curBuyStatus.value = 0
 
@@ -288,7 +302,7 @@ watchEffect(async () => {
     curSelectedCard.value = data.groupBuyingInfo
   }
   else {
-    const { data: { data } } = await getGroupSharingData()
+    const { data: { data } } = await getGroupSharingData(query.shareUser as string)
     console.log('getGroupSharingData', data)
     cardList.value = data.map(item => ({
       ...item,
@@ -392,8 +406,8 @@ function initWxConfig() {
         wxStateStore.setWx(wx)
         let shareLink = `${window.location.origin}${window.location.pathname}`
         const loginInfo = getLoginInfo()
-        if (loginInfo.name)
-          shareLink += `?shareUser=${loginInfo.name}`
+        if (loginInfo?.phone)
+          shareLink += `?shareUser=${loginInfo.phone}`
 
         if (route.query.groupBuyingOrderId)
           shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
@@ -596,7 +610,7 @@ initWxConfig()
         </div>
       </div>
       <div class="contentFooter">
-        本活动最终解释权归XXXX所有
+        本活动最终解释权归CC编程所有
       </div>
     </div>
     <CardDescDetail
@@ -1003,7 +1017,7 @@ initWxConfig()
       }
 
       .playContent {
-        margin-top: 54px;
+        margin-top: 28px;
         width: 648px;
         display: flex;
         justify-content: space-between;
@@ -1049,6 +1063,7 @@ initWxConfig()
       .ruleContent {
         width: 648px;
         overflow-y: scroll;
+        overscroll-behavior-y: contain;
 
         // font-size: 24px;
         // font-family: PingFang SC;

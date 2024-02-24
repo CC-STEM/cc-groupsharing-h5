@@ -1,7 +1,7 @@
 import store from '@/utils/local-storage'
 import type { User } from '@/typing'
 
-export function getLoginInfo() {
+export function getLoginInfo(): User | null {
   const userInfoStr = store.get('userInfo')
   if (userInfoStr) {
     const userInfo: User = JSON.parse(userInfoStr)
