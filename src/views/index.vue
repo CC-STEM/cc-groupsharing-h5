@@ -14,6 +14,7 @@ import StudentInfoForm from '@/components/StudentInfoForm.vue'
 import play1 from '@/assets/play1.png'
 import play2 from '@/assets/play2.png'
 import play3 from '@/assets/play3.png'
+import OrderLogo from '@/assets/order.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
@@ -33,6 +34,9 @@ const groupSharingStatus = ref('开团中')
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
 const showAddStudentInfoDialog = ref(false)
 const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
+const curLoginInfo = computed(() => {
+  return getLoginInfo()
+})
 
 const groupShareUserName = computed(() => {
   const query = route.query
@@ -76,6 +80,8 @@ const curBuyStatus = ref<number>(0) // 0 拼团 1 单独买
 const showCardDetailSheetOption = ref({
   show: false,
 })
+
+const orderLogoOffset = ref({ x: 300, y: 400 })
 
 const shareInfo = computed(() => {
   let shareLink = `${window.location.origin}${window.location.pathname}`
@@ -471,6 +477,10 @@ initWxConfig()
 
 <template>
   <div class="container">
+    <van-floating-bubble
+      v-model:offset="orderLogoOffset" axis="xy" :icon="OrderLogo" magnetic="x"
+      @click="router.push('/Order')"
+    />
     <div class="header">
       <img class="adImg" src="@/assets/ad.png">
       <div class="sharingBar">
@@ -588,7 +598,7 @@ initWxConfig()
           <div class="orders" @click="() => { router.push('/Order') }">
             我的拼团订单 <img class="rightArrow" :src="RightArrow" alt="">
           </div>
-          <div class="logout" @click="logout">
+          <div v-if="curLoginInfo" class="logout" @click="logout">
             退出
           </div>
         </div>

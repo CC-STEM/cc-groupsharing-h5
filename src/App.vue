@@ -28,3 +28,21 @@ provide('isRealDark', computed(() => theme.value === 'dark'))
     <RouterView />
   </VanConfigProvider>
 </template>
+
+<style lang="less">
+.van-floating-bubble {
+  width: 130px !important;
+  height: 130px !important;
+  border-radius: 0 !important;
+  background: none !important;
+
+  .van-icon__image {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// .van-toast {
+//   font-size: 30px !important;
+// }
+</style>

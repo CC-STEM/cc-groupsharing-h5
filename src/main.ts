@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createRouterScroller } from 'vue-router-better-scroller'
-import { ActionSheet } from 'vant'
+import { ActionSheet, FloatingBubble } from 'vant'
 import VConsole from 'vconsole'
 
 import App from './App.vue'
@@ -37,6 +37,7 @@ pinia.use(piniaPluginPersistedstate)
 app.use(router)
 app.use(pinia)
 app.use(ActionSheet)
+app.use(FloatingBubble)
 
 // 增强了 Vue Router v4 的滚动行为
 app.use(createRouterScroller({
