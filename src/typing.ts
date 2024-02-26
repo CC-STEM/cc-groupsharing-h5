@@ -155,6 +155,7 @@ export interface GroupSharingCardInfo {
   startTime?: string
   storeName?: string
   vipName: string
+  wecom?: string
 }
 
 export type GetGroupSharingDataRes = BaseResponse & {
@@ -200,4 +201,21 @@ export type GetHistoryOrderListRes = BaseResponse & {
 
 export interface DeleteGroupBuyingOrderReq {
   id: string
+}
+
+export type GetStudentInfoRes = BaseResponse & {
+  data: StudentInfoType
+}
+
+export interface RecommendRankItem {
+  no: number
+  nickName: string
+  mobile: string
+  count: number
+  differ: number
+  currentUser: boolean
+}
+
+export type RecommendRankRes = BaseResponse & {
+  data: RecommendRankItem[]
 }

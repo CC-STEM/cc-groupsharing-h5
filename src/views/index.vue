@@ -4,7 +4,7 @@ import wx from 'weixin-js-sdk'
 
 import { useRoute, useRouter } from 'vue-router'
 import { closeToast, showLoadingToast, showToast } from 'vant'
-import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem, StudentInfoType } from '@/typing'
+import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem, RecommendRankItem, StudentInfoType } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
@@ -15,10 +15,11 @@ import play1 from '@/assets/play1.png'
 import play2 from '@/assets/play2.png'
 import play3 from '@/assets/play3.png'
 import OrderLogo from '@/assets/order.png'
+import RankLogo from '@/assets/rank.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
-import { addGroupBuyingOrder, addStudentInfo, getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
+import { addGroupBuyingOrder, addStudentInfo, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getUserRecommendRank, getWxOpenId, wxPrepay } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
 // import { localStorage } from '@/utils/local-storage'
@@ -32,6 +33,8 @@ const route = useRoute()
 const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
+const curMemberInfo = ref<StudentInfoType | null>(null)
+const curRank = ref<RecommendRankItem[]>([])
 const showAddStudentInfoDialog = ref(false)
 const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
 const curLoginInfo = computed(() => {
@@ -82,6 +85,7 @@ const showCardDetailSheetOption = ref({
 })
 
 const orderLogoOffset = ref({ x: 300, y: 400 })
+const rankLogoOffset = ref({ x: 300, y: 500 })
 
 const shareInfo = computed(() => {
   let shareLink = `${window.location.origin}${window.location.pathname}`
@@ -321,6 +325,15 @@ watchEffect(async () => {
   }
 })
 
+watchEffect(async () => {
+  const { data: { data } } = await getMemberInfo()
+  console.log('getMemberInfo', data)
+  curMemberInfo.value = data
+  const { data: { data: rankList } } = await getUserRecommendRank()
+  curRank.value = rankList
+  // console.log('res2', res2)
+})
+
 watch(shareInfo, (newVal) => {
   if (newVal && wx) {
     console.log('newShareInfo', newVal)
@@ -481,6 +494,10 @@ initWxConfig()
       v-model:offset="orderLogoOffset" axis="xy" :icon="OrderLogo" magnetic="x"
       @click="router.push('/Order')"
     />
+    <van-floating-bubble
+      v-model:offset="rankLogoOffset" axis="xy" :icon="RankLogo" magnetic="x"
+      @click="router.push('/Rank')"
+    />
     <div class="header">
       <img class="adImg" src="@/assets/ad.png">
       <div class="sharingBar">
@@ -631,7 +648,7 @@ initWxConfig()
       v-model:show="showAddStudentInfoDialog" :close-on-click-overlay="true" width="100%"
       :show-confirm-button="false" :show-cancel-button="false"
     >
-      <StudentInfoForm @handle-click-pay="handlePay" />
+      <StudentInfoForm :cur-info="curMemberInfo" @handle-click-pay="handlePay" />
     </van-dialog>
   </div>
 </template>

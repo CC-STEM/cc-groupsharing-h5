@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
+import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, GetStudentInfoRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, RecommendRankRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -110,5 +110,19 @@ export function deleteGroupBuyingOrder(data: DeleteGroupBuyingOrderReq) {
   return axiosIns<BaseResponse>({
     method: 'POST',
     url: `/api/app/h5/delGroupBuyingOrder/${data.id}`,
+  })
+}
+
+export function getMemberInfo() {
+  return axiosIns<GetStudentInfoRes>({
+    method: 'GET',
+    url: `/api/app/h5/getMemberInfo`,
+  })
+}
+
+export function getUserRecommendRank() {
+  return axiosIns<RecommendRankRes>({
+    method: 'GET',
+    url: `/api/app/h5/rank`,
   })
 }

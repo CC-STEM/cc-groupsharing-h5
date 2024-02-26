@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createRouterScroller } from 'vue-router-better-scroller'
 import { ActionSheet, FloatingBubble } from 'vant'
+
 import VConsole from 'vconsole'
 
 import App from './App.vue'

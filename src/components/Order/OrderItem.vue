@@ -20,6 +20,7 @@ const containerWidth = computed(() => px2vw(curCard.value.width || 656))
 const orderStatus = computed(() => ORDER_STATUS_CN_MAP[props.orderInfo.status])
 const orderBtnText = computed(() => ORDER_OP_TEXT[props.orderInfo.status])
 const orderTextColor = computed(() => ORDER_OP_TEXT_COLOR[props.orderInfo.status])
+const showWecom = ref(false)
 
 async function handleOp() {
   // 当前订单为未拼成，提示邀请
@@ -68,7 +69,8 @@ async function handleOp() {
   }
   // 当前订单为已拼成或已单买，提示去使用
   if ([ORDER_STATUS_ENUM.COMPLETED, ORDER_STATUS_ENUM.SINGLE_BUY].includes(props.orderInfo.status))
-    showToast('请前往门店使用')
+    showWecom.value = true
+    // showToast('请前往门店使用')
 
   // 当前订单为已失效，操作删除
   if (props.orderInfo.status === ORDER_STATUS_ENUM.INVALID) {
@@ -100,6 +102,11 @@ async function handleOp() {
         {{ orderBtnText }}
       </div>
     </div>
+    <van-popup v-model:show="showWecom" class="wecomDialog">
+      <div class="dialogText">
+        请联系门店老师使用
+      </div><img v-if="curCard?.wecom" class="wecom" :src="curCard.wecom" alt="">
+    </van-popup>
   </div>
 </template>
 
@@ -152,6 +159,21 @@ async function handleOp() {
       position: absolute;
       right: 10px;
     }
+  }
+}
+
+.wecomDialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .dialogText {
+    margin: 20px 0px;
+  }
+
+  .wecom {
+    width: 80%;
+    height: 80%;
   }
 }
 </style>

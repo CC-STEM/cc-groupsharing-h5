@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { showDialog } from 'vant'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
 
+interface Props {
+  curInfo?: StudentInfoType
+}
+const props = defineProps<Props>()
 const curEmits = defineEmits(['handleClickPay'])
 const myForm = ref(null)
-
-const studentInfo = ref<StudentInfoType>({
+const studentInfo = computed<StudentInfoType>(() => props.curInfo || {
   childrenName: '',
   school: '',
   birth: '',
@@ -77,25 +80,43 @@ function onClassTimeConfirm({ selectedValues, selectedOptions }) {
   showClassTimePicker.value = false
   console.log('selectedValues', selectedValues)
   console.log('selectedOptions', selectedOptions)
-  classTimeResult.value = selectedOptions[0]?.text
+  // classTimeResult.value = selectedOptions[0]?.text
   studentInfo.value.classTime = selectedValues[0]
 }
+
+watch(() => studentInfo.value.classTime, (newVal) => {
+  classTimeResult.value = expectedClassTimeOptions.find(item => item.value === newVal).text
+}, {
+  immediate: true,
+})
 
 function onKnownedCCConfirm({ selectedValues, selectedOptions }) {
   showKnownedCCPicker.value = false
   console.log('selectedValues', selectedValues)
   console.log('selectedOptions', selectedOptions)
-  knownedCCResult.value = selectedOptions[0]?.text
+  // knownedCCResult.value = selectedOptions[0]?.text
   studentInfo.value.isKnowedCc = selectedValues[0]
 }
+
+watch(() => studentInfo.value.isKnowedCc, (newVal) => {
+  knownedCCResult.value = HowKnowCCOptions.find(item => item.value === newVal).text
+}, {
+  immediate: true,
+})
 
 function onLearningCodeConfirm({ selectedValues, selectedOptions }) {
   showLearnedCodingPicker.value = false
   console.log('selectedValues', selectedValues)
   console.log('selectedOptions', selectedOptions)
-  learnedCodingResult.value = selectedOptions[0]?.text
+  // learnedCodingResult.value = selectedOptions[0]?.text
   studentInfo.value.isLearnedCode = selectedValues[0]
 }
+
+watch(() => studentInfo.value.isLearnedCode, (newVal) => {
+  learnedCodingResult.value = hasLearnedCodingOptions.find(item => item.value === newVal).text
+}, {
+  immediate: true,
+})
 
 async function toPay() {
   // 检查当前form
