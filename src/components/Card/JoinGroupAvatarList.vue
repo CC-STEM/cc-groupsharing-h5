@@ -22,7 +22,7 @@ const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 7))
 // const CONFIG_AVATAR_LIST = [Avatar1, Avatar2, Avatar3, Avatar4, Avatar5]
 
 const avatarList = computed<{ type: string, url: string }[]>(() => {
-  const hasAvatarNum = props.currentNumber || 0
+  const hasAvatarNum = (props.currentNumber > props.number ? props.number : props.currentNumber) || 0
   const addNum = props.number - hasAvatarNum
   const finalList = []
   for (let i = 0; i < hasAvatarNum; i++) {
