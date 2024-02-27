@@ -42,7 +42,8 @@ provide('isRealDark', computed(() => theme.value === 'dark'))
   }
 }
 
-// .van-toast {
-//   font-size: 30px !important;
-// }
+.van-toast {
+  font-size: 30px !important;
+  line-height: 30px !important;
+}
 </style>

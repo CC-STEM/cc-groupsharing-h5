@@ -84,8 +84,8 @@ const showCardDetailSheetOption = ref({
   show: false,
 })
 
-const orderLogoOffset = ref({ x: 300, y: 400 })
-const rankLogoOffset = ref({ x: 300, y: 500 })
+const orderLogoOffset = ref({ x: 0, y: 300 })
+const rankLogoOffset = ref({ x: 0, y: 400 })
 
 const shareInfo = computed(() => {
   let shareLink = `${window.location.origin}${window.location.pathname}`
