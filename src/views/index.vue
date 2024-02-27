@@ -168,7 +168,20 @@ async function handlePay(studentInfo: StudentInfoType) {
     console.log('addStudentInfo err', e)
   }
   if (wx && curSelectedCard.value) {
-    // 先是后端用户下单，下完单之后，前端再调取微信支付
+    /*
+        现有流程：
+        1. 微信支付后台预下单
+        2. 前端调取微信支付
+        3. 业务后台生成订单
+        目前存在并发问题，导致突破成团限制
+
+        后续待优化流程：
+        1. 业务后台生成订单
+        2. 微信支付后台预下单
+        3. 前端调取微信支付
+
+        所有异常情况（包括取消微信支付）均需要捕获，并调用订单无效接口处理
+     */
     wxPrepay({ openId: wxStateStore.openId, payAmount: curBuyStatus.value === 0 ? curSelectedCard.value.groupBuyingPrice : curSelectedCard.value.price, payDes: '测试支付' })
       .then(async (res) => {
         console.log('wxPrepay', res)
@@ -460,6 +473,9 @@ function initWxConfig() {
             },
           })
         })]).then(() => {
+        }).catch((e) => {
+          console.log('设置分享异常', e)
+        }).finally(() => {
           closeToast()
         })
       })
@@ -467,6 +483,7 @@ function initWxConfig() {
       // 通过error接口处理失败验证
       wx.error((err: any) => {
         console.log(`---wx接口失败：${JSON.stringify(err)}}\n`)
+        closeToast()
       })
     }
     else {
@@ -475,6 +492,8 @@ function initWxConfig() {
     }
   }).catch((err: any) => {
     console.log(`---获取ticket失败err，返回结果:${JSON.stringify(err)}\n`)
+  }).finally(() => {
+    closeToast()
   })
 }
 
