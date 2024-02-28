@@ -4,7 +4,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createRouterScroller } from 'vue-router-better-scroller'
 import { ActionSheet, FloatingBubble } from 'vant'
 
-import VConsole from 'vconsole'
+// import VConsole from 'vconsole'
 
 import App from './App.vue'
 import router from './router'
@@ -31,8 +31,8 @@ import '@/assets/global.less'
 
 const app = createApp(App)
 const pinia = createPinia()
-const myVConsole = new VConsole()
-console.log(myVConsole)
+// const myVConsole = new VConsole()
+// console.log(myVConsole)
 pinia.use(piniaPluginPersistedstate)
 
 app.use(router)
