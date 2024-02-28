@@ -30,7 +30,7 @@ export function tranformQueryInfoToString<T>(queryInfo: T) {
 export function getWxOpenId(params: GetOpenIdReq) {
   return axiosIns<GetOpenIdRes>({
     method: 'GET',
-    url: `/api/user/wechat/userInfo`,
+    url: `/user/wechat/userInfo`,
     params,
   })
 }
@@ -39,7 +39,7 @@ export function getWxOpenId(params: GetOpenIdReq) {
 export function getInitSDKAuthConfig(data: getAuthConfigReq) {
   return axiosIns<getAuthConfigRes>({
     method: 'GET',
-    url: `/api/user/wechat/signature`,
+    url: `/user/wechat/signature`,
     params: data,
   })
 }
@@ -48,7 +48,7 @@ export function getInitSDKAuthConfig(data: getAuthConfigReq) {
 export function wxPrepay(data: PrepayReq) {
   return axiosIns<PrepayRes>({
     method: 'POST',
-    url: `/api/user/wechat/prepay`,
+    url: `/user/wechat/prepay`,
     data,
   })
 }
@@ -57,14 +57,14 @@ export function wxPrepay(data: PrepayReq) {
 export function getSMSCode(phone: string) {
   return axiosIns<BaseResponse>({
     method: 'GET',
-    url: `/api/msm/send/${phone}`,
+    url: `/msm/send/${phone}`,
   })
 }
 
 export function loginByPhone(data: PhoneLoginReq) {
   return axiosIns<PhoneLoginRes>({
     method: 'POST',
-    url: `/api/app/h5/login`,
+    url: `/app/h5/login`,
     data,
   })
 }
@@ -72,28 +72,28 @@ export function loginByPhone(data: PhoneLoginReq) {
 export function getGroupSharingData(mobile: string) {
   return axiosIns<GetGroupSharingDataRes>({
     method: 'GET',
-    url: `/api/app/h5/listGroupBuying?mobile=${mobile}`,
+    url: `/app/h5/listGroupBuying?mobile=${mobile}`,
   })
 }
 
 export function getSharedGroupData(groupBuyingOrderId: string) {
   return axiosIns<GetSharedGroupDataRes>({
     method: 'GET',
-    url: `/api/app/h5/myGroupBuyingOrder/${groupBuyingOrderId}`,
+    url: `/app/h5/myGroupBuyingOrder/${groupBuyingOrderId}`,
   })
 }
 
 export function getMyGroupSharingList() {
   return axiosIns<GetHistoryOrderListRes>({
     method: 'GET',
-    url: `/api/app/h5/listGroupBuyingOrder`,
+    url: `/app/h5/listGroupBuyingOrder`,
   })
 }
 
 export function addStudentInfo(data: AddStudentInfoReq) {
   return axiosIns<BaseResponse>({
     method: 'POST',
-    url: `/api/app/h5/addMember`,
+    url: `/app/h5/addMember`,
     data,
   })
 }
@@ -101,7 +101,7 @@ export function addStudentInfo(data: AddStudentInfoReq) {
 export function addGroupBuyingOrder(data: AddGroupBuyingOrderReq) {
   return axiosIns<AddGroupBuyingOrderRes>({
     method: 'POST',
-    url: `/api/app/h5/addGroupBuyingOrder`,
+    url: `/app/h5/addGroupBuyingOrder`,
     data,
   })
 }
@@ -109,20 +109,20 @@ export function addGroupBuyingOrder(data: AddGroupBuyingOrderReq) {
 export function deleteGroupBuyingOrder(data: DeleteGroupBuyingOrderReq) {
   return axiosIns<BaseResponse>({
     method: 'POST',
-    url: `/api/app/h5/delGroupBuyingOrder/${data.id}`,
+    url: `/app/h5/delGroupBuyingOrder/${data.id}`,
   })
 }
 
 export function getMemberInfo() {
   return axiosIns<GetStudentInfoRes>({
     method: 'GET',
-    url: `/api/app/h5/getMemberInfo`,
+    url: `/app/h5/getMemberInfo`,
   })
 }
 
 export function getUserRecommendRank() {
   return axiosIns<RecommendRankRes>({
     method: 'GET',
-    url: `/api/app/h5/rank`,
+    url: `/app/h5/rank`,
   })
 }
