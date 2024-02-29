@@ -42,10 +42,10 @@ async function handleOp() {
       Promise.all([new Promise((resolve) => {
         // 自定义分享
         wxStateStore.wx.updateAppMessageShareData({
-          imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+          imgUrl: curCard.value.shareImgUrl,
           link: shareLink,
-          desc: '拼团活动期间，用户可在公众号网页发起拼团',
-          title: '邀好友一起拼',
+          desc: curCard.value.shareSubTitle,
+          title: curCard.value.shareTitle,
           success() {
             console.log('设置朋友分享成功')
             resolve(true)
@@ -53,9 +53,9 @@ async function handleOp() {
         })
       }), new Promise((resolve) => {
         wxStateStore.wx.updateTimelineShareData({
-          imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
+          imgUrl: curCard.value.shareImgUrl,
           link: shareLink,
-          title: '邀好友一起拼',
+          title: curCard.value.shareTitle,
           success() {
             console.log('设置朋友圈分享成功')
             resolve(true)
@@ -70,7 +70,7 @@ async function handleOp() {
   // 当前订单为已拼成或已单买，提示去使用
   if ([ORDER_STATUS_ENUM.COMPLETED, ORDER_STATUS_ENUM.SINGLE_BUY].includes(props.orderInfo.status))
     showWecom.value = true
-    // showToast('请前往门店使用')
+  // showToast('请前往门店使用')
 
   // 当前订单为已失效，操作删除
   if (props.orderInfo.status === ORDER_STATUS_ENUM.INVALID) {

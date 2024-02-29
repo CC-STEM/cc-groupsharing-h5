@@ -182,7 +182,7 @@ async function handlePay(studentInfo: StudentInfoType) {
 
         所有异常情况（包括取消微信支付）均需要捕获，并调用订单无效接口处理
      */
-    wxPrepay({ openId: wxStateStore.openId, payAmount: curBuyStatus.value === 0 ? curSelectedCard.value.groupBuyingPrice : curSelectedCard.value.price, payDes: '测试支付' })
+    wxPrepay({ openId: wxStateStore.openId, payAmount: curBuyStatus.value === 0 ? curSelectedCard.value.groupBuyingPrice : curSelectedCard.value.price, payDes: curSelectedCard.value.vipName })
       .then(async (res) => {
         console.log('wxPrepay', res)
         const { data: { code, data } } = res
