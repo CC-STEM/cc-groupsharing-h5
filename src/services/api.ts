@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, GetStudentInfoRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, RecommendRankRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
+import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHasJoinGroupRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, GetStudentInfoRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, RecommendRankRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -124,5 +124,12 @@ export function getUserRecommendRank() {
   return axiosIns<RecommendRankRes>({
     method: 'GET',
     url: `/app/h5/rank`,
+  })
+}
+
+export function checkIsInGroup(groupBuyingId: string) {
+  return axiosIns<GetHasJoinGroupRes>({
+    method: 'GET',
+    url: `/app/h5/getIsInGroup?groupBuyingId=${groupBuyingId}`,
   })
 }

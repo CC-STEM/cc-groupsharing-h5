@@ -19,7 +19,7 @@ import RankLogo from '@/assets/rank.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
-import { addGroupBuyingOrder, addStudentInfo, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getUserRecommendRank, getWxOpenId, wxPrepay } from '@/services'
+import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getUserRecommendRank, getWxOpenId, wxPrepay } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
 // import { localStorage } from '@/utils/local-storage'
@@ -256,49 +256,59 @@ async function handlePay(studentInfo: StudentInfoType) {
 }
 
 // 0 发起拼团 or 1 单独购买
-function handleBuy(buyStatus: number) {
+async function handleBuy(buyStatus: number) {
   // 检查当前是否有登录态
   const loginInfo = getLoginInfo()
   if (!(loginInfo?.token)) {
     router.push(`/PhoneLogin?${curPath}`)
     return
+  }
+
+  // 检查当前是否已参加过活动 : TODO:
+  if (curSelectedCard.value) {
+    try {
+      const { data: { data } } = await checkIsInGroup(curSelectedCard.value.id)
+      console.log('checkIsInGroup res', data)
+      if (data.hasJoin) {
+        showToast('已参与该拼团活动,不可重复参加!')
+        return
+      }
+    }
+    catch (e) {
+      console.log('checkIsInGroup err', e)
+    }
   }
 
   showAddStudentInfoDialog.value = true
   curBuyStatus.value = buyStatus
-
-  // 跳转拼活动配置id
-  // const groupBuyingId = curSelectedCard.value.id
-  // if (groupBuyingId) {
-  //   router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&buyStatus=${buyStatus}`)
-  // }
-  // else {
-  //   console.log('当前groupBuyingId', groupBuyingId)
-  //   showToast('请稍后重试...')
-  // }
 }
 
 // 参团
-function handleJoinGroup() {
+async function handleJoinGroup() {
   // 检查当前是否有登录态
   const loginInfo = getLoginInfo()
   if (!(loginInfo?.token)) {
     router.push(`/PhoneLogin?${curPath}`)
     return
   }
+
+  // 检查当前是否已参加过活动 : TODO:
+  if (curSelectedCard.value) {
+    try {
+      const { data: { data } } = await checkIsInGroup(curSelectedCard.value.id)
+      console.log('checkIsInGroup res', data)
+      if (data.hasJoin) {
+        showToast('已参与该拼团活动,不可重复参加!')
+        return
+      }
+    }
+    catch (e) {
+      console.log('checkIsInGroup err', e)
+    }
+  }
+
   showAddStudentInfoDialog.value = true
   curBuyStatus.value = 0
-
-  // 跳转拼活动配置id, 订单id
-  // const groupBuyingId = curSelectedCard.value.id
-  // const groupBuyingOrderId = route.query.groupBuyingOrderId
-  // if (groupBuyingId && groupBuyingOrderId) {
-  //   router.push(`/StudentInfo?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${groupBuyingOrderId}&buyStatus=0`)
-  // }
-  // else {
-  //   console.log('当前groupBuyingId, groupBuyingOrderId', groupBuyingId, groupBuyingOrderId)
-  //   showToast('请稍后重试...')
-  // }
 }
 
 function changeCard(cardIndex: number) {

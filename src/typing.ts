@@ -219,3 +219,9 @@ export interface RecommendRankItem {
 export type RecommendRankRes = BaseResponse & {
   data: RecommendRankItem[]
 }
+
+export type GetHasJoinGroupRes = BaseResponse & {
+  data: {
+    hasJoin: boolean
+  }
+}
