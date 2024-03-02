@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
+import { showToast } from 'vant'
 import PageView from '@/components/PageView.vue'
 import { getSMSCode, loginByPhone } from '@/services/index'
+
 import { setLoginInfo } from '@/utils'
 
 const router = useRouter()
@@ -42,10 +44,15 @@ function refreshCodeBtn() {
 }
 
 async function handleLogin() {
-  const { data: { data, code: resCode } } = await loginByPhone({
+  const { data: { data, code: resCode, msg } } = await loginByPhone({
     code: code.value,
     phone: phone.value,
   })
+
+  if (resCode !== 200) {
+    showToast(msg)
+    return
+  }
   setLoginInfo(data)
   console.log('handleLogin', data, resCode)
   console.log('route', route)

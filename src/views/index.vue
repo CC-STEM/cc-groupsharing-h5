@@ -521,11 +521,11 @@ initWxConfig()
   <div class="container">
     <van-floating-bubble
       v-model:offset="orderLogoOffset" axis="xy" :icon="OrderLogo" magnetic="x"
-      @click="router.push('/Order')"
+      @click="router.push(`/Order?${curPath}`)"
     />
     <van-floating-bubble
       v-model:offset="rankLogoOffset" axis="xy" :icon="RankLogo" magnetic="x"
-      @click="router.push('/Rank')"
+      @click="router.push(`/Rank?${curPath}`)"
     />
     <div class="header">
       <img class="adImg" src="@/assets/ad.png">
@@ -641,7 +641,7 @@ initWxConfig()
           <div class="name">
             拼团玩法 <img class="downArrow" :src="DownArrow" alt="">
           </div>
-          <div class="orders" @click="() => { router.push('/Order') }">
+          <div class="orders" @click="() => { router.push(`/Order?${curPath}`) }">
             我的拼团订单 <img class="rightArrow" :src="RightArrow" alt="">
           </div>
           <div v-if="curLoginInfo" class="logout" @click="logout">
