@@ -37,6 +37,7 @@ const curMemberInfo = ref<StudentInfoType | null>(null)
 const curRank = ref<RecommendRankItem[]>([])
 const showAddStudentInfoDialog = ref(false)
 const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
+const isWxReady = ref(false)
 const curLoginInfo = computed(() => {
   return getLoginInfo()
 })
@@ -88,10 +89,14 @@ const orderLogoOffset = ref({ x: 0, y: 300 })
 const rankLogoOffset = ref({ x: 0, y: 400 })
 
 const shareInfo = computed(() => {
+  const lastShareUser = route.query.shareUser
   let shareLink = `${window.location.origin}${window.location.pathname}`
   const loginInfo = getLoginInfo()
-  if (loginInfo?.phone)
+  // 当前用户已登录，且当前打开的是一个拼团，用户又已参与过这个团，分享的就是自己的，其他情况都按上一个人的转发
+  if (loginInfo && loginInfo.phone && route.query.groupBuyingOrderId && curGroupOrderInfo.value?.isInOrder)
     shareLink += `?shareUser=${loginInfo.phone}`
+  else
+    shareLink += `?shareUser=${lastShareUser}`
 
   if (route.query.groupBuyingOrderId)
     shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
@@ -99,10 +104,10 @@ const shareInfo = computed(() => {
   console.log('shareLink', shareLink)
   if (curSelectedCard.value) {
     return {
-      imgUrl: curSelectedCard.value.shareImgUrl,
+      imgUrl: curSelectedCard.value.shareImgUrl || 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
       link: shareLink,
-      desc: curSelectedCard.value.shareSubTitle, // subTitle
-      title: curSelectedCard.value.shareTitle, // title
+      desc: curSelectedCard.value.shareSubTitle || '拼团活动期间，用户可在公众号网页发起拼团', // subTitle
+      title: curSelectedCard.value.shareTitle || '邀好友一起拼', // title
     }
   }
   return {
@@ -357,29 +362,44 @@ watchEffect(async () => {
   // console.log('res2', res2)
 })
 
-watch(shareInfo, (newVal) => {
-  if (newVal && wx) {
-    console.log('newShareInfo', newVal)
-    Promise.all([new Promise((resolve) => {
-      // 自定义分享
-      wx.updateAppMessageShareData({
-        ...shareInfo.value,
-        success() {
-          console.log('设置朋友分享成功')
-          resolve(true)
-        },
+watch([shareInfo, isWxReady], (newVal) => {
+  if (newVal[0] && wx) {
+    console.log('newShareInfo', newVal[0])
+    console.log('isWxReady', isWxReady.value)
+    if (isWxReady.value) {
+      Promise.all([new Promise((resolve, reject) => {
+        // 自定义分享
+        wx.updateAppMessageShareData({
+          ...shareInfo.value,
+          success() {
+            console.log('设置朋友分享成功')
+            resolve(true)
+          },
+          fail(e) {
+            console.log('设置异常', e)
+            showToast(`微信朋友分享功能设置异常 ${e.errMsg}`)
+            reject(e)
+          },
+        })
+      }), new Promise((resolve, reject) => {
+        wx.updateTimelineShareData({
+          ...shareInfo.value,
+          success() {
+            console.log('设置朋友圈分享成功')
+            resolve(true)
+          },
+          fail(e) {
+            console.log('设置异常', e)
+            showToast(`微信朋友圈分享功能设置异常 ${e.errMsg}`)
+            reject(e)
+          },
+        })
+      })]).catch((e) => {
+        console.log('设置分享异常', e)
       })
-    }), new Promise((resolve) => {
-      wx.updateTimelineShareData({
-        ...shareInfo.value,
-        success() {
-          console.log('设置朋友圈分享成功')
-          resolve(true)
-        },
-      })
-    })])
+    }
   }
-})
+}, { immediate: true })
 
 // 微信相关
 // 用户授权，回调，获取openID
@@ -446,15 +466,7 @@ function initWxConfig() {
       wx.ready(async () => {
         console.log(`---初始化wx.config成功\n`)
         wxStateStore.setWx(wx)
-        let shareLink = `${window.location.origin}${window.location.pathname}`
-        const loginInfo = getLoginInfo()
-        if (loginInfo?.phone)
-          shareLink += `?shareUser=${loginInfo.phone}`
-
-        if (route.query.groupBuyingOrderId)
-          shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
-
-        console.log('shareLink', shareLink)
+        isWxReady.value = true
 
         wx.checkJsApi({
           jsApiList: ['chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData'], // 需要检测的JS接口列表，所有JS接口列表见附录2,

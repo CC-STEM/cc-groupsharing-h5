@@ -39,7 +39,7 @@ async function handleOp() {
         duration: 0,
       })
       console.log('订单内分享链接', shareLink)
-      Promise.all([new Promise((resolve) => {
+      Promise.all([new Promise((resolve, reject) => {
         // 自定义分享
         wxStateStore.wx.updateAppMessageShareData({
           imgUrl: curCard.value.shareImgUrl,
@@ -50,8 +50,11 @@ async function handleOp() {
             console.log('设置朋友分享成功')
             resolve(true)
           },
+          fail(e) {
+            reject(e.errMsg)
+          },
         })
-      }), new Promise((resolve) => {
+      }), new Promise((resolve, reject) => {
         wxStateStore.wx.updateTimelineShareData({
           imgUrl: curCard.value.shareImgUrl,
           link: shareLink,
@@ -60,10 +63,16 @@ async function handleOp() {
             console.log('设置朋友圈分享成功')
             resolve(true)
           },
+          fail(e) {
+            reject(e.errMsg)
+          },
         })
       })]).then(() => {
-        closeToast()
         showToast('请点击页面右上角 ... 发起分享')
+      }).catch((e) => {
+        console.log('订单项设置分享异常', e)
+      }).finally(() => {
+        closeToast()
       })
     }
   }
