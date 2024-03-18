@@ -3,6 +3,10 @@
 import { createRouter, createWebHistory } from 'vue-router/auto'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
+import { getLoginInfo } from '@/utils/index'
+
+const LOGIN_PATH = '/PhoneLogin'
+const HOME_PATH = '/'
 
 NProgress.configure({ showSpinner: true, parent: '#app' })
 const router = createRouter({
@@ -11,7 +15,27 @@ const router = createRouter({
 
 router.beforeEach((_to, _from, next) => {
   NProgress.start() // start progress bar
-  next()
+  const loginInfo = getLoginInfo()
+  if (_to.path === LOGIN_PATH) {
+    next()
+    return
+  }
+
+  const toQuery = _to.query
+  console.log('_to', _to)
+  console.log('_from', _from)
+  if (_to.path === HOME_PATH) {
+    next()
+  }
+  else {
+    if (loginInfo?.token) {
+      next()
+    }
+    else {
+      const toLoginPath = `/PhoneLogin?${Object.entries(toQuery).map(item => `${item[0]}=${item[1]}`).join('&')}`
+      next(toLoginPath) // 这里要带上原参数
+    }
+  }
 })
 
 router.afterEach(() => {

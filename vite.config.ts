@@ -85,8 +85,8 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           autoprefixer(),
           viewport({
             appSelector: '#app',
-            viewportWidth: 375,
-            maxDisplayWidth: 600,
+            viewportWidth: 750,
+            // maxDisplayWidth: 600,
           }),
         ],
       },

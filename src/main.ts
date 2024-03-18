@@ -2,6 +2,10 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createRouterScroller } from 'vue-router-better-scroller'
+import { ActionSheet, FloatingBubble } from 'vant'
+
+// import VConsole from 'vconsole'
+
 import App from './App.vue'
 import router from './router'
 
@@ -22,13 +26,19 @@ import 'vant/es/toast/style'
 import 'vant/es/dialog/style'
 import 'vant/es/notify/style'
 import 'vant/es/image-preview/style'
+import '@/assets/font/font.css'
+import '@/assets/global.less'
 
 const app = createApp(App)
 const pinia = createPinia()
+// const myVConsole = new VConsole()
+// console.log(myVConsole)
 pinia.use(piniaPluginPersistedstate)
 
 app.use(router)
 app.use(pinia)
+app.use(ActionSheet)
+app.use(FloatingBubble)
 
 // 增强了 Vue Router v4 的滚动行为
 app.use(createRouterScroller({
