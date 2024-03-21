@@ -1,5 +1,7 @@
 import axios from 'axios'
+import { showToast } from 'vant'
 import { getLoginInfo } from '@/utils'
+import router from '@/router/index'
 
 export const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL
 export const LOGIN_PAHT = '/login'
@@ -21,21 +23,21 @@ axiosInstance.interceptors.request.use((config) => {
 })
 
 axiosInstance.interceptors.response.use((res) => {
-  // const code = res.data.code
-  // if (code === 401) {
-  //   // 鉴权失败，跳登录页
-  //   if (!isShowReLoginTip) {
-  //     ElMessage({
-  //       type: 'warning',
-  //       message: '登录态无效，即将跳转至登录页'
-  //     })
-  //     isShowReLoginTip = true
-  //     console.log('import.meta.env.PROD', import.meta.env.PROD)
-  //     if (import.meta.env.PROD) {
-  //       // setTimeout(() => { window.open(loginUrl, '_top', ''); }, 2000)
-  //     }
-  //   }
-  // }
+  console.log('res', res)
+  const code = res.data.code
+  if (code === 401) {
+    // 判断是否访问订单页
+    console.log('routeInfo', router.currentRoute.value)
+    if (router.currentRoute.value.path.includes('/Order')) {
+      // 鉴权失败，跳登录页
+      showToast('登录态无效，请重新登录')
+      setTimeout(() => {
+        const toLoginPath = `/PhoneLogin?${Object.entries(router.currentRoute.value.query).map(item => `${item[0]}=${item[1]}`).join('&')}`
+        console.log('toLoginPath111', toLoginPath)
+        router.push(toLoginPath)
+      }, 1000)
+    }
+  }
   return res
 })
 

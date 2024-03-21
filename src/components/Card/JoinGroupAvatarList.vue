@@ -4,10 +4,12 @@ import { computed } from 'vue'
 import { px2vw } from '@/utils/calcStyle'
 import AddImg from '@/assets/add.png'
 import IPAvatar from '@/assets/ip.png'
+import Mock1 from '@/assets/mock1.png'
 
 interface Props {
   // avatarList: Avatar[]
   number: number // 活动配置人数
+  isHundred?: boolean // 是否百人团
   currentNumber?: number // 当前参团人数，只有在发起的团里才展示
   avatarWidth?: number
   avatarHeight?: number
@@ -22,9 +24,20 @@ const realAvatarMargin = computed(() => px2vw(props.avatarMargin || 7))
 // const CONFIG_AVATAR_LIST = [Avatar1, Avatar2, Avatar3, Avatar4, Avatar5]
 
 const avatarList = computed<{ type: string, url: string }[]>(() => {
+  const finalList = []
+  if (props.isHundred) {
+    finalList.push({
+      type: 'AVATAR',
+      url: Mock1,
+    }, {
+      type: 'AVATAR',
+      url: IPAvatar,
+    })
+    return finalList
+  }
+
   const hasAvatarNum = (props.currentNumber > props.number ? props.number : props.currentNumber) || 0
   const addNum = props.number - hasAvatarNum
-  const finalList = []
   for (let i = 0; i < hasAvatarNum; i++) {
     finalList.push({
       type: 'AVATAR',

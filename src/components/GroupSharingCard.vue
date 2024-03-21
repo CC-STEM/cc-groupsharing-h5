@@ -1,16 +1,37 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, watchEffect } from 'vue'
 import type { GroupSharingCardInfo } from '@/typing'
 import ValidCardBackImg from '@/assets/validCard.png'
 import InValidCardBackImg from '@/assets/invalidCard.png'
 import { px2vw } from '@/utils/calcStyle'
-import { transformDateString } from '@/utils/index'
+import { calcProgressByCardInfo, transformDateString } from '@/utils/index'
 
 const props = defineProps<{ cardInfo: GroupSharingCardInfo, isActiveStyle?: boolean }>()
 const curEmit = defineEmits(['detailClick'])
 const realWidth = computed(() => px2vw(props.cardInfo?.width || 656))
 const realHeight = computed(() => px2vw(props.cardInfo?.height || 285))
 const backImgUrl = computed(() => props.isActiveStyle ? `url(${ValidCardBackImg})` : `url(${InValidCardBackImg})`)
+const isHundredGroup = computed(() => props.cardInfo?.groupBuyingType === 2) // 百人团
+let refreshTimer = null
+const curHundredGroupProgressInfo = ref<{ percent: number, remain: string } | null>(null)
+
+watchEffect(() => {
+  curHundredGroupProgressInfo.value = calcProgressByCardInfo(props.cardInfo)
+})
+
+watch(() => props.cardInfo, (newVal) => {
+  if (newVal) {
+    refreshTimer !== null && clearInterval(refreshTimer)
+    refreshTimer = setInterval(() => {
+      curHundredGroupProgressInfo.value = calcProgressByCardInfo(newVal)
+    }, 10 * 60 * 1000)
+  }
+  else {
+    refreshTimer !== null && clearInterval(refreshTimer)
+  }
+}, {
+  immediate: true,
+})
 </script>
 
 <template>
@@ -27,8 +48,20 @@ const backImgUrl = computed(() => props.isActiveStyle ? `url(${ValidCardBackImg}
       <div class="price">
         ￥ {{ props.cardInfo?.price }}
       </div>
-      <div class="joinNum">
+      <div v-if="!isHundredGroup" class="joinNum">
         {{ props.cardInfo?.number }}人拼
+      </div>
+      <div v-else class="hundredText">
+        百人团
+      </div>
+    </div>
+    <div v-if="isHundredGroup && curHundredGroupProgressInfo" class="progress">
+      <div class="bar">
+        <div class="default" />
+        <div :style="{ width: `${curHundredGroupProgressInfo.percent}%` }" class="complete" />
+      </div>
+      <div class="percent">
+        {{ curHundredGroupProgressInfo.percent }}%
       </div>
     </div>
     <div class="course">
@@ -98,6 +131,64 @@ const backImgUrl = computed(() => props.isActiveStyle ? `url(${ValidCardBackImg}
       font-weight: 800;
       color: #FFFFFF;
       text-align: right;
+    }
+
+    .hundredText {
+      width: 96px;
+      height: 36px;
+      background: rgba(0, 0, 0, 0);
+      border-radius: 18px;
+      border: 2px solid #FFFFFF;
+      text-align: center;
+      line-height: 36px;
+
+      font-family: PingFang SC;
+      font-weight: 800;
+      font-size: 26px;
+      color: #FFFFFF;
+      margin-top: 12px;
+      position: absolute;
+      right: 0px;
+    }
+  }
+
+  .progress {
+    width: 304px;
+    position: absolute;
+    bottom: 77px;
+    right: 28px;
+    display: flex;
+    align-items: center;
+
+    .bar {
+      width: 240px;
+      height: 18px;
+      border-radius: 9px;
+      margin-right: 1px;
+      background: #CC3F10;
+      position: relative;
+
+      // .default {
+      //   background: #CC3F10;
+      //   width: 100%;
+      //   height: 100%;
+      //   border-radius: 9px;
+      // }
+
+      .complete {
+        position: absolute;
+
+        height: 100%;
+        background: linear-gradient(180deg, #FFF9E6, #FFB400);
+        border-radius: 9px;
+      }
+    }
+
+    .percent {
+      font-family: PingFang SC;
+      font-weight: bold;
+      font-size: 24px;
+      color: #FFFFFF;
     }
   }
 
