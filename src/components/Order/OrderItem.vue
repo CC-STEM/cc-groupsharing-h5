@@ -14,6 +14,7 @@ import { deleteGroupBuyingOrder } from '@/services'
 const props = defineProps<{ orderInfo: MyHistoryOrderInfo }>()
 const curEmits = defineEmits(['detailClick'])
 const curCard = computed(() => props.orderInfo.groupBuyingInfo)
+const isHundredGroup = computed(() => curCard.value.groupBuyingType === 2) // 百人团
 const wxStateStore = useWXStateStore()
 
 const containerWidth = computed(() => px2vw(curCard.value.width || 656))
@@ -100,8 +101,8 @@ async function handleOp() {
     <div class="opBox">
       <div class="opAvatar">
         <JoinGroupAvatarList
-          :avatar-margin="3" :avatar-height="66" :avatar-width="66" :number="curCard.number"
-          :current-number="props.orderInfo.currentNumber"
+          :is-hundred="isHundredGroup" :avatar-margin="3" :avatar-height="66" :avatar-width="66"
+          :number="curCard.number" :current-number="props.orderInfo.currentNumber"
         />
       </div>
       <div class="orderStatus">

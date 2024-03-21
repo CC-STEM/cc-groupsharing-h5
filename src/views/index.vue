@@ -16,15 +16,18 @@ import play2 from '@/assets/play2.png'
 import play3 from '@/assets/play3.png'
 import OrderLogo from '@/assets/order.png'
 import RankLogo from '@/assets/rank.png'
+import mock1 from '@/assets/mock1.png'
+import mock2 from '@/assets/mock2.png'
 
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
+
 import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getUserRecommendRank, getWxOpenId, wxPrepay } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
 // import { localStorage } from '@/utils/local-storage'
 import { useWXStateStore } from '@/stores'
-import { clearLoginInfo, getLoginInfo } from '@/utils/index'
+import { calcProgressByCardInfo, clearLoginInfo, generateRandomUserName, getLoginInfo } from '@/utils/index'
 
 const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
@@ -101,6 +104,10 @@ const shareInfo = computed(() => {
   if (route.query.groupBuyingOrderId)
     shareLink += `&groupBuyingOrderId=${route.query.groupBuyingOrderId}`
 
+  // 百人团会用
+  if (route.query.groupBuyingId)
+    shareLink += `&groupBuyingId=${route.query.groupBuyingId}`
+
   console.log('shareLink', shareLink)
   if (curSelectedCard.value) {
     return {
@@ -130,7 +137,7 @@ const playList = computed<PlayItem[]>(() => {
       subTitle: '分享优惠多',
     }, {
       imgUrl: play3,
-      title: `${curSelectedCard.value.number}人成团`,
+      title: `${curSelectedCard.value.groupBuyingType === 2 ? '百' : curSelectedCard.value.number}人成团`,
       subTitle: '',
     }]
   }
@@ -148,6 +155,100 @@ const playList = computed<PlayItem[]>(() => {
     subTitle: '',
   }]
 })
+
+// 百人团相关虚拟信息
+
+// 参团人数（件数），计算规则 已经过时间/总时间 * 100 + 实际件数
+// 最近用户信息 头像 用户名 参团时间（xx分钟前） 均随机
+const hundredGroupJoinPercent = ref(0)
+const clockTime = ref('')
+const randomJoinUsers = ref<{ id: number, text: string }[]>([])
+let refreshProgressTimer = null
+let refreshRemainTimer = null
+let refreshJoinUserTimer = null
+let refreshAvatarTimer = null
+const isHundredGroup = computed(() => curSelectedCard.value?.groupBuyingType === 2) // 是否百人团形式
+
+// 刷新剩余时间
+watch(curSelectedCard, (newVal) => {
+  if (newVal) {
+    refreshRemainTimer !== null && clearInterval(refreshRemainTimer)
+    refreshRemainTimer = setInterval(() => {
+      clockTime.value = calcProgressByCardInfo(newVal).remain
+    }, 1000)
+  }
+  else {
+    refreshRemainTimer !== null && clearInterval(refreshRemainTimer)
+  }
+})
+
+// 刷新已参加人数
+watch(curSelectedCard, (newVal) => {
+  if (newVal) {
+    refreshProgressTimer !== null && clearInterval(refreshProgressTimer)
+    refreshProgressTimer = setInterval(() => {
+      hundredGroupJoinPercent.value = calcProgressByCardInfo(newVal).percent
+    }, 10 * 60 * 1000)
+  }
+  else {
+    refreshProgressTimer !== null && clearInterval(refreshProgressTimer)
+  }
+})
+
+// 刷新随机参团人
+watch(curSelectedCard, (newVal) => {
+  if (newVal) {
+    refreshJoinUserTimer !== null && clearInterval(refreshJoinUserTimer)
+    refreshJoinUserTimer = setInterval(() => {
+      const curRandomUserName = generateRandomUserName()
+      randomJoinUsers.value = [{ id: new Date().getTime(), text: `用户 ${curRandomUserName}   ${Math.floor(Math.random() * 60)}分钟前参与拼团` }]
+    }, (5 + Math.round(Math.random() * 5)) * 1000)
+  }
+  else {
+    refreshJoinUserTimer !== null && clearInterval(refreshJoinUserTimer)
+  }
+})
+
+const secondAvatarList = ref([])
+
+// 刷新参团头像
+watch(curSelectedCard, (newVal) => {
+  if (newVal) {
+    refreshAvatarTimer !== null && clearInterval(refreshAvatarTimer)
+    refreshAvatarTimer = setInterval(() => {
+      secondAvatarList.value = []
+      for (let i = 0; i < 5; i++) {
+        secondAvatarList.value.push({
+          type: 'AVATAR',
+          url: new URL(`../assets/avatar/${6 + Math.floor(Math.random() * 17)}.jpg`, import.meta.url).href,
+        })
+      }
+    }, (5 + Math.round(Math.random() * 5)) * 1000)
+  }
+  else {
+    refreshAvatarTimer !== null && clearInterval(refreshAvatarTimer)
+  }
+})
+
+const realtimeProgress = computed(() => {
+  if (curSelectedCard.value) {
+    const info = calcProgressByCardInfo(curSelectedCard.value)
+    return info
+  }
+  return null
+})
+
+const firstAvatarList = [{
+  type: 'AVATAR',
+  url: mock1,
+}]
+
+for (let i = 1; i <= 5; i++) {
+  firstAvatarList.push({
+    type: 'AVATAR',
+    url: new URL(`../assets/avatar/${i}.jpg`, import.meta.url).href,
+  })
+}
 
 function logout() {
   clearLoginInfo()
@@ -226,7 +327,7 @@ async function handlePay(studentInfo: StudentInfoType) {
                 })
                 console.log('addGroupBuyingOrderId----', orderId)
                 console.log('curBuyStatus', curBuyStatus.value)
-                // 跳转到主页 TODO: 如果是单买则不带订单id跳转
+                // 跳转到主页  如果是单买则不带订单id跳转
                 if (curBuyStatus.value === 0) {
                   showToast('购买成功，前往我的订单查看')
                   router.push(`/?groupBuyingOrderId=${orderId}&shareUser=${query.shareUser}`)
@@ -340,7 +441,7 @@ watchEffect(async () => {
     curSelectedCard.value = data.groupBuyingInfo
   }
   else {
-    const { data: { data } } = await getGroupSharingData(query.shareUser as string)
+    const { data: { data } } = await getGroupSharingData(query.shareUser as string, query.groupBuyingId as string)
     console.log('getGroupSharingData', data)
     cardList.value = data.map(item => ({
       ...item,
@@ -540,7 +641,13 @@ initWxConfig()
       @click="router.push(`/Rank?${curPath}`)"
     />
     <div class="header">
-      <img class="adImg" src="@/assets/ad.png">
+      <div style="position: relative;">
+        <img class="adImg" src="@/assets/ad.png">
+        <div v-if="isHundredGroup" class="configHeaderTitle">
+          <div />{{ curSelectedCard?.title }}
+          <div />
+        </div>
+      </div>
       <div class="sharingBar">
         <div class="left">
           <span>{{ shopName }}</span>
@@ -561,93 +668,153 @@ initWxConfig()
       </div>
     </div>
     <div class="content">
-      <div class="contentTitle">
-        <div class="firstTitle">
-          {{ firstTitle }}
-        </div>
-        <div class="secondTitle">
-          {{ secondTitle }}
-        </div>
-      </div>
-      <div class="joinGroup">
-        <JoinGroupAvatarList
-          v-if="curSelectedCard" :number="curSelectedCard.number"
-          :current-number="curGroupOrderInfo?.currentNumber" :is-support-add="true"
-        />
-        <div v-if="!isSharedGroup" class="createGrougBtnList">
-          <div class="singleBuyBtn">
-            <div class="price">
-              ￥{{ curSelectedCard?.price }}
+      <template v-if="curSelectedCard">
+        <template v-if="!isHundredGroup">
+          <div class="contentTitle">
+            <div class="firstTitle">
+              {{ firstTitle }}
             </div>
-            <div class="desc" @click="handleBuy(1)">
-              单独购买
+            <div class="secondTitle">
+              {{ secondTitle }}
             </div>
           </div>
-          <div class="createGroupBtn">
-            <div class="price">
-              ￥{{ curSelectedCard?.groupBuyingPrice }}
+          <div class="joinGroup">
+            <JoinGroupAvatarList
+              v-if="curSelectedCard" :number="curSelectedCard.number"
+              :current-number="curGroupOrderInfo?.currentNumber" :is-support-add="true"
+            />
+            <div v-if="!isSharedGroup" class="createGrougBtnList">
+              <div class="singleBuyBtn">
+                <div class="price">
+                  ￥{{ curSelectedCard?.price }}
+                </div>
+                <div class="desc" @click="handleBuy(1)">
+                  单独购买
+                </div>
+              </div>
+              <div class="createGroupBtn">
+                <div class="price">
+                  ￥{{ curSelectedCard?.groupBuyingPrice }}
+                </div>
+                <div class="desc" @click="handleBuy(0)">
+                  发起拼团
+                </div>
+              </div>
             </div>
-            <div class="desc" @click="handleBuy(0)">
-              发起拼团
+            <div v-if="isSharedGroup && curGroupOrderInfo" class="btnList">
+              <template v-if="curSelectedCard && (Date.now() > new Date(curSelectedCard.endTime).getTime())">
+                <div class="groupTips">
+                  该拼团已结束！
+                </div>
+                <div class="joinGroupBtn" @click="() => { }">
+                  <div class="desc">
+                    我知道了
+                  </div>
+                </div>
+              </template>
+              <template
+                v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber === curSelectedCard.number"
+              >
+                <div class="groupTips">
+                  当前团已满员！
+                </div>
+                <div class="joinGroupBtn" @click="() => { }">
+                  <div class="desc">
+                    前往活动主页发起新团
+                  </div>
+                </div>
+              </template>
+              <template
+                v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber < curSelectedCard.number"
+              >
+                <div v-if="curGroupOrderInfo.isInOrder" class="groupTips">
+                  您已成功加入该团！
+                </div>
+                <div v-if="curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="inviteOther">
+                  <div class="desc">
+                    邀请好友
+                  </div>
+                </div>
+                <div v-if="!curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="handleJoinGroup">
+                  <div class="desc">
+                    立即参团
+                  </div>
+                  <div class="price">
+                    ￥{{ curSelectedCard.groupBuyingPrice }}
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
-        </div>
-        <div v-if="isSharedGroup && curGroupOrderInfo" class="btnList">
-          <template v-if="curSelectedCard && (Date.now() > new Date(curSelectedCard.endTime).getTime())">
-            <div class="groupTips">
-              该拼团已结束！
-            </div>
-            <div class="joinGroupBtn" @click="() => { }">
-              <div class="desc">
-                我知道了
+        </template>
+        <template v-else>
+          <template v-if="curSelectedCard">
+            <template v-if="!isSharedGroup">
+              <div class="joinHundredGroupBtn" @click="handleJoinGroup">
+                <div class="desc">
+                  立即参团
+                </div>
+                <div class="price">
+                  ￥{{ curSelectedCard.groupBuyingPrice }}
+                </div>
               </div>
-            </div>
+            </template>
+            <template v-else>
+              <template v-if="(Date.now() > new Date(curSelectedCard.endTime).getTime())">
+                <div class="joinHundredGroupBtn">
+                  <div class="desc">
+                    该拼团已结束！
+                  </div>
+                </div>
+              </template>
+              <template v-else-if="curGroupOrderInfo">
+                <template v-if="curGroupOrderInfo.isInOrder">
+                  <div class="joinHundredGroupBtn" @click="inviteOther">
+                    <div class="desc">
+                      邀请好友
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="joinHundredGroupBtn" @click="handleJoinGroup">
+                    <div class="desc">
+                      立即参团
+                    </div>
+                    <div class="price">
+                      ￥{{ curSelectedCard.groupBuyingPrice }}
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </template>
           </template>
-          <template
-            v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber === curSelectedCard.number"
-          >
-            <div class="groupTips">
-              当前团已满员！
+
+          <div class="hundredGroupContainer">
+            <div v-if="realtimeProgress" class="clock">
+              <span>{{ realtimeProgress.percent }}</span> 人已拼 <span>{{
+                realtimeProgress.percent }}</span>
+              件，<span>{{ clockTime }}</span> 后结束
             </div>
-            <div class="joinGroupBtn" @click="() => { }">
-              <div class="desc">
-                前往活动主页发起新团
+            <div class="hundredAvatarList">
+              <div class="first">
+                <img v-for="(item, index) in firstAvatarList" :key="index" :src="item.url" class="avatarImg">
+              </div>
+              <div class="second">
+                <div><img :src="mock2"></div>
+                <img v-for="(item, index) in secondAvatarList" :key="index" :src="item.url" class="avatarImg">
               </div>
             </div>
-          </template>
-          <template
-            v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber < curSelectedCard.number"
-          >
-            <div v-if="curGroupOrderInfo.isInOrder" class="groupTips">
-              您已成功加入该团！
-            </div>
-            <div v-if="curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="inviteOther">
-              <div class="desc">
-                邀请好友
-              </div>
-            </div>
-            <div v-if="!curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="handleJoinGroup">
-              <div class="desc">
-                立即参团
-              </div>
-              <div class="price">
-                ￥{{ curSelectedCard.groupBuyingPrice }}
-              </div>
-            </div>
-          </template>
-          <!-- <div class="groupTips">
-            该拼团已结束
+            <div class="bar" />
+            <van-barrage v-model="randomJoinUsers" :rows="1" :duration="5000">
+              <div style="width:100%;height: 100%" />
+            </van-barrage>
+            <!-- <div class="latestJoin">
+              <img :src="latestUserAvatar" />
+              <span>用户 {{ latestUserName }} {{ latestTime }} 分钟前参与拼单</span>
+            </div> -->
           </div>
-          <div class="joinGroupBtn" @click="handleJoinGroup">
-            <div class="desc">
-              立即参团
-            </div>
-            <div class="price">
-              ￥{{ curSelectedCard?.groupBuyingPrice }}
-            </div>
-          </div> -->
-        </div>
-      </div>
+        </template>
+      </template>
       <div class="joinGroupPlay">
         <div class="top">
           <div class="name">
@@ -756,9 +923,29 @@ initWxConfig()
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 
     .adImg {
       width: 100%;
+    }
+
+    .configHeaderTitle {
+      position: absolute;
+      left: 30px;
+      bottom: 30px;
+      font-family: PingFang SC;
+      font-weight: bold;
+      font-size: 24px;
+      color: #FED7B1;
+      display: flex;
+      align-items: center;
+
+      div {
+        width: 29px;
+        height: 2px;
+        background: #FED7B1;
+        margin: 0 8px;
+      }
     }
 
     .sharingBar {
@@ -1150,6 +1337,122 @@ initWxConfig()
       font-weight: 400;
       color: #E43E12;
     }
+
+    .joinHundredGroupBtn {
+      display: flex;
+      // flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 697px;
+      height: 88px;
+      background: linear-gradient(179deg, #FFE691, #FF3A05);
+      border-radius: 44px;
+      margin-top: 21px;
+      margin-bottom: 18px;
+
+      .price {
+        font-size: 36px;
+        font-family: PingFang SC;
+        font-weight: 800;
+        color: #FFFFFF;
+      }
+
+      .desc {
+        font-size: 24px;
+        font-family: PingFang SC;
+        font-weight: 500;
+        color: #FFFFFF;
+      }
+    }
+
+    .hundredGroupContainer {
+      width: 700px;
+      height: 379px;
+      background: #FFFFFF;
+      border-radius: 30px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-direction: column;
+      // justify-content: center;
+      align-items: center;
+
+      .clock {
+        margin-top: 30px;
+        font-family: PingFang SC;
+        font-weight: 500;
+        font-size: 24px;
+        color: #1C1C1C;
+
+        span {
+          font-family: PingFang SC;
+          font-weight: 800;
+          font-size: 24px;
+          color: #EE4A14;
+        }
+      }
+
+      .hundredAvatarList .second {
+        div {
+          background: #FFECEC;
+          border-radius: 50%;
+          border: 3px solid #FFFFFF;
+          width: 80px;
+          height: 80px;
+          margin: 15px 15px;
+
+          img {
+            width: 40px;
+            height: 8px;
+            border: none;
+            border-radius: 0;
+          }
+        }
+
+      }
+
+      .hundredAvatarList div {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        align-items: center;
+
+        .avatarImg {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          border: 3px solid #FFFFFF;
+          margin: 15px 15px;
+        }
+      }
+
+      .bar {
+        width: 660px;
+        height: 1px;
+        background: #F5F5F5;
+        margin-top: 9px;
+      }
+
+      .latestJoin {
+        // margin-top: 30px;
+        height: 87px;
+        display: flex;
+        align-items: center;
+
+        img {
+          width: 45px;
+          height: 45px;
+          border-radius: 50%;
+          margin-right: 15px;
+        }
+
+        span {
+          font-family: PingFang SC;
+          font-weight: 500;
+          font-size: 24px;
+          color: #1C1C1C;
+        }
+      }
+    }
   }
 }
 
@@ -1172,5 +1475,17 @@ initWxConfig()
   overflow-y: scroll;
   margin-top: 30px;
   height: 90%;
+}
+
+:deep(.van-barrage) {
+  width: 100%;
+  height: 87px;
+}
+
+:deep(.van-barrage__item) {
+  font-family: PingFang SC;
+  font-weight: 500;
+  font-size: 24px;
+  color: #1C1C1C;
 }
 </style>

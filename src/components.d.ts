@@ -18,6 +18,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     StudentInfoForm: typeof import('./components/StudentInfoForm.vue')['default']
     VanActionSheet: typeof import('vant/es')['ActionSheet']
+    VanBarrage: typeof import('vant/es')['Barrage']
     VanButton: typeof import('vant/es')['Button']
     VanCellGroup: typeof import('vant/es')['CellGroup']
     VanConfigProvider: typeof import('vant/es')['ConfigProvider']

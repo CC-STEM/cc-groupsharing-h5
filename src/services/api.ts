@@ -69,10 +69,10 @@ export function loginByPhone(data: PhoneLoginReq) {
   })
 }
 
-export function getGroupSharingData(mobile: string) {
+export function getGroupSharingData(mobile: string, groupBuyingId?: string) {
   return axiosIns<GetGroupSharingDataRes>({
     method: 'GET',
-    url: `/app/h5/listGroupBuying?mobile=${mobile}`,
+    url: `/app/h5/listGroupBuying?mobile=${mobile}${groupBuyingId ? (`&groupBuyingId=${groupBuyingId}`) : ''}`,
   })
 }
 

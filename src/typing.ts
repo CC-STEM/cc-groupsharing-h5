@@ -156,6 +156,8 @@ export interface GroupSharingCardInfo {
   storeName?: string
   vipName: string
   wecom?: string
+  groupBuyingType?: number
+  title?: string
 }
 
 export type GetGroupSharingDataRes = BaseResponse & {
