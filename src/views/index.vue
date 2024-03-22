@@ -173,7 +173,13 @@ watch(curSelectedCard, (newVal) => {
   if (newVal) {
     refreshRemainTimer !== null && clearInterval(refreshRemainTimer)
     refreshRemainTimer = setInterval(() => {
-      clockTime.value = calcProgressByCardInfo(newVal).remain
+      const remainInfo = calcProgressByCardInfo(newVal)
+      if (remainInfo.percent === 100) {
+        clearInterval(refreshRemainTimer)
+        clockTime.value = remainInfo.remain
+        return
+      }
+      clockTime.value = remainInfo.remain
     }, 1000)
   }
   else {
@@ -1339,9 +1345,11 @@ initWxConfig()
       // flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 697px;
-      height: 88px;
-      background: linear-gradient(179deg, #FFE691, #FF3A05);
+      width: 709px;
+      height: 106px;
+      // background: linear-gradient(179deg, #FFE691, #FF3A05);
+      background-image: url('@/assets/buyBtn.png');
+      background-size: 100% 100%;
       border-radius: 44px;
       margin-top: 21px;
       margin-bottom: 18px;

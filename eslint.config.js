@@ -7,5 +7,6 @@ export default antfu({
   rules: {
     'no-console': 'off',
     'no-alert': 'off',
+    'new-cap': 'off',
   },
 })
