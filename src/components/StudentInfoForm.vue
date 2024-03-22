@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref, watch } from 'vue'
 import { showDialog } from 'vant'
 import TipImg from '@/assets/studentInfoTip.png'
 import type { StudentInfoType } from '@/typing'
@@ -10,7 +10,7 @@ interface Props {
 const props = defineProps<Props>()
 const curEmits = defineEmits(['handleClickPay'])
 const myForm = ref(null)
-const studentInfo = computed<StudentInfoType>(() => props.curInfo || {
+const studentInfo = ref({
   childrenName: '',
   school: '',
   birth: '',
@@ -18,6 +18,13 @@ const studentInfo = computed<StudentInfoType>(() => props.curInfo || {
   classTime: 0,
   isKnowedCc: 0,
   isLearnedCode: 0,
+})
+
+watch(() => props.curInfo, (newVal) => {
+  if (newVal)
+    studentInfo.value = newVal
+}, {
+  immediate: true,
 })
 
 const phonePattern = /^[1][3,4,5,6,7,8,9][0-9]{9}$/

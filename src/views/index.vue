@@ -4,7 +4,7 @@ import wx from 'weixin-js-sdk'
 
 import { useRoute, useRouter } from 'vue-router'
 import { closeToast, showLoadingToast, showToast } from 'vant'
-import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem, RecommendRankItem, StudentInfoType } from '@/typing'
+import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem, StudentInfoType } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
 import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
 import GroupPlayItem from '@/components/GroupPlayItem.vue'
@@ -22,7 +22,7 @@ import mock2 from '@/assets/mock2.png'
 import DownArrow from '@/assets/downArrow.png'
 import RightArrow from '@/assets/rightArrow.png'
 
-import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getUserRecommendRank, getWxOpenId, wxPrepay } from '@/services'
+import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
 
 // import { useGroupStateStore } from '@/stores'
 // import { localStorage } from '@/utils/local-storage'
@@ -37,7 +37,6 @@ const shopName = ref('门店名称')
 const groupSharingStatus = ref('开团中')
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
 const curMemberInfo = ref<StudentInfoType | null>(null)
-const curRank = ref<RecommendRankItem[]>([])
 const showAddStudentInfoDialog = ref(false)
 const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
 const isWxReady = ref(false)
@@ -458,9 +457,6 @@ watchEffect(async () => {
   const { data: { data } } = await getMemberInfo()
   console.log('getMemberInfo', data)
   curMemberInfo.value = data
-  const { data: { data: rankList } } = await getUserRecommendRank()
-  curRank.value = rankList
-  // console.log('res2', res2)
 })
 
 watch([shareInfo, isWxReady], (newVal) => {
@@ -911,7 +907,7 @@ initWxConfig()
 .container {
   width: 750px;
   // width: 100vw;
-  height: 2281px;
+  // height: 2281px;
   position: relative;
   background-image: url('@/assets/shareBackgroundTop.png');
   background-repeat: no-repeat;
@@ -1054,7 +1050,7 @@ initWxConfig()
   }
 
   .content {
-    height: 70%;
+    // height: 70%;
     background-image: url('@/assets/shareBackground.png');
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -1281,7 +1277,7 @@ initWxConfig()
 
     .joinGroupRule {
       width: 700px;
-      height: 669px;
+      max-height: 1100px;
       background: #FFFFFF;
       border-radius: 30px;
       margin-bottom: 24px;
