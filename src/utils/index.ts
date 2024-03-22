@@ -40,8 +40,8 @@ export function calcProgressByCardInfo(curCard: GroupSharingCardInfo) {
   const passedTime = new Date().getTime() - new Date(startTime).getTime()
   const curPercentValue = Math.floor(passedTime * 100 / totalTime)
   return {
-    percent: curPercentValue,
-    remain: formatTimeBySecond(totalTime - passedTime),
+    percent: curPercentValue > 100 ? 100 : curPercentValue,
+    remain: formatTimeBySecond(totalTime < passedTime ? 0 : (totalTime - passedTime)),
   }
 }
 

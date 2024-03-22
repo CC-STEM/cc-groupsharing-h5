@@ -8,7 +8,7 @@ export const LOGIN_PAHT = '/login'
 export const HOME_PATH = '/'
 
 // 需校验的登录态接口地址
-const AUTH_REQUIRED_APIS = ['/app/h5/getIsInGroup', '/app/h5/rank', '/app/h5/listGroupBuyingOrder', '/app/h5/addMember']
+const AUTH_REQUIRED_APIS = ['/app/h5/getIsInGroup', '/app/h5/rank', '/app/h5/listGroupBuyingOrder', '/app/h5/addMember', '/app/h5/delGroupBuyingOrder', '/app/h5/addGroupBuyingOrder']
 
 const axiosInstance = axios.create({
   timeout: 20000,
@@ -31,14 +31,14 @@ axiosInstance.interceptors.response.use((res) => {
   if (code === 401) {
     // 判断是否访问订单页
     console.log('routeInfo', router.currentRoute.value)
-    if (AUTH_REQUIRED_APIS.includes(res.config.url)) {
+    if (AUTH_REQUIRED_APIS.find(item => res.config.url.includes(item))) {
       // 鉴权失败，跳登录页
       showToast('登录态无效，请重新登录')
       setTimeout(() => {
         const toLoginPath = `/PhoneLogin?${Object.entries(router.currentRoute.value.query).map(item => `${item[0]}=${item[1]}`).join('&')}`
         console.log('toLoginPath111', toLoginPath)
         router.push(toLoginPath)
-      }, 1000)
+      }, 500)
     }
   }
   return res
