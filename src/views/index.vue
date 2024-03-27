@@ -753,11 +753,23 @@ initWxConfig()
           <template v-if="curSelectedCard">
             <template v-if="!isSharedGroup">
               <div class="joinHundredGroupBtn" @click="handleJoinGroup">
-                <div class="desc">
-                  立即参团
-                </div>
-                <div class="price">
-                  ￥{{ curSelectedCard.groupBuyingPrice }}
+                <div>
+                  <div class="new">
+                    <div class="desc">
+                      立即参团
+                    </div>
+                    <div class="price">
+                      ￥{{ curSelectedCard.groupBuyingPrice }}
+                    </div>
+                  </div>
+                  <div class="old">
+                    <div class="desc">
+                      原价
+                    </div>
+                    <div class="price">
+                      ￥{{ curSelectedCard.price }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -779,11 +791,23 @@ initWxConfig()
                 </template>
                 <template v-else>
                   <div class="joinHundredGroupBtn" @click="handleJoinGroup">
-                    <div class="desc">
-                      立即参团
-                    </div>
-                    <div class="price">
-                      ￥{{ curSelectedCard.groupBuyingPrice }}
+                    <div>
+                      <div class="new">
+                        <div class="desc">
+                          立即参团
+                        </div>
+                        <div class="price">
+                          ￥{{ curSelectedCard.groupBuyingPrice }}
+                        </div>
+                      </div>
+                      <div class="old">
+                        <div class="desc">
+                          原价
+                        </div>
+                        <div class="price">
+                          ￥{{ curSelectedCard.price }}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </template>
@@ -793,8 +817,8 @@ initWxConfig()
 
           <div class="hundredGroupContainer">
             <div v-if="realtimeProgress" class="clock">
-              <span>{{ realtimeProgress.percent }}</span> 人已拼 <span>{{
-                realtimeProgress.percent }}</span>
+              <span>{{ realtimeProgress.percent + 8 }}</span> 人已拼 <span>{{
+                realtimeProgress.percent + 8 }}</span>
               件，<span>{{ clockTime }}</span> 后结束
             </div>
             <div class="hundredAvatarList">
@@ -1354,18 +1378,43 @@ initWxConfig()
       margin-top: 21px;
       margin-bottom: 18px;
 
-      .price {
-        font-size: 36px;
-        font-family: PingFang SC;
-        font-weight: 800;
-        color: #FFFFFF;
-      }
+      div:first-child {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
 
-      .desc {
-        font-size: 24px;
-        font-family: PingFang SC;
-        font-weight: 500;
-        color: #FFFFFF;
+        .new {
+          display: flex;
+          flex-direction: row;
+
+          .price {
+            font-size: 36px;
+            font-family: PingFang SC;
+            font-weight: 800;
+            color: #FFFFFF;
+          }
+
+          .desc {
+            font-size: 24px;
+            font-family: PingFang SC;
+            font-weight: 500;
+            color: #FFFFFF;
+          }
+        }
+
+        .old {
+          display: flex;
+          flex-direction: row;
+
+          .price,
+          .desc {
+            font-family: PingFang SC;
+            font-weight: bold;
+            font-size: 24px;
+            color: #FFDFDA;
+            text-decoration-line: line-through;
+          }
+        }
       }
     }
 
