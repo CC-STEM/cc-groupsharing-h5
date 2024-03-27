@@ -19,7 +19,7 @@ export function clearLoginInfo() {
   store.clearAll()
 }
 
-export function transformDateString(time: string) {
+export function transformDateString(time: number) {
   return new Date(time).toLocaleDateString()
 }
 

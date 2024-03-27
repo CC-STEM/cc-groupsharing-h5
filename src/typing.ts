@@ -142,7 +142,7 @@ export interface GroupSharingCardInfo {
   height?: number
   deadline?: number
   details: string
-  endTime: string
+  endTime: number
   groupBuyingPrice?: number
   id?: string
   lessonNumber: number
@@ -152,7 +152,7 @@ export interface GroupSharingCardInfo {
   shareImgUrl?: string
   shareSubTitle?: string
   shareTitle?: string
-  startTime?: string
+  startTime?: number
   storeName?: string
   vipName: string
   wecom?: string

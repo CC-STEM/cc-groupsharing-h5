@@ -123,6 +123,7 @@ watch(() => props.cardInfo, (newVal) => {
       font-family: PingFang SC;
       font-weight: 400;
       color: #FFFFFF;
+      text-decoration: v-bind('isHundredGroup ? "line-through" : "none"')
     }
 
     .joinNum {
