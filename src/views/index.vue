@@ -266,6 +266,17 @@ function clickDetail(curCard: GroupSharingCardInfo) {
   curSelectedCard.value = curCard
 }
 
+function handleClickRank() {
+  if (!route.query.groupBuyingId) {
+    if (curSelectedCard.value) {
+      const groupBuyingId = curSelectedCard.value.id
+      router.push(`/Rank?${curPath}&groupBuyingId=${groupBuyingId}`)
+      return
+    }
+  }
+  router.push(`/Rank?${curPath}`)
+}
+
 // 支付
 async function handlePay(studentInfo: StudentInfoType) {
   // 补充用户信息
@@ -640,7 +651,7 @@ initWxConfig()
     />
     <van-floating-bubble
       v-model:offset="rankLogoOffset" axis="xy" :icon="RankLogo" magnetic="x"
-      @click="router.push(`/Rank?${curPath}`)"
+      @click="handleClickRank"
     />
     <div class="header">
       <div style="position: relative;">

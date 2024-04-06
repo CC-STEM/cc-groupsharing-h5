@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
 import PageView from '@/components/PageView.vue'
 import { getUserRecommendRank } from '@/services/api'
+
 import type { RecommendRankItem } from '@/typing'
 import RankTip from '@/assets/rankTip.png'
 import IpLogo from '@/assets/ip.png'
 import RankFirst from '@/assets/first.png'
 import RankSecond from '@/assets/second.png'
 import RankThird from '@/assets/third.png'
+
+const route = useRoute()
 
 const curRank = ref<RecommendRankItem[]>([])
 const showFetchLoading = ref(false)
@@ -18,7 +22,7 @@ const myRankInfo = computed<RecommendRankItem | null>(() => {
 
 watchEffect(async () => {
   showFetchLoading.value = false
-  const { data: { data: rankList } } = await getUserRecommendRank()
+  const { data: { data: rankList } } = await getUserRecommendRank(route.query.groupBuyingId as string)
   curRank.value = rankList
   showFetchLoading.value = true
   // console.log('res2', res2)
