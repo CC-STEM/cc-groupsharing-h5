@@ -120,10 +120,10 @@ export function getMemberInfo() {
   })
 }
 
-export function getUserRecommendRank() {
+export function getUserRecommendRank(groupBuyingId?: string) {
   return axiosIns<RecommendRankRes>({
     method: 'GET',
-    url: `/app/h5/rank`,
+    url: `${groupBuyingId ? (`/app/h5/rank/${groupBuyingId}`) : '/app/h5/rank/'}`,
   })
 }
 
