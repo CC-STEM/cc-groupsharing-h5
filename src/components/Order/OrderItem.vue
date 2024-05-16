@@ -1,7 +1,7 @@
 import type { ORDER_STATUS_ENUM } from '@/typing';
 <script setup lang="ts">
 import { computed } from 'vue'
-import { showLoadingToast, showSuccessToast } from 'vant'
+import { closeToast, showLoadingToast, showSuccessToast } from 'vant'
 import type { MyHistoryOrderInfo } from '@/typing'
 import { ORDER_OP_TEXT, ORDER_OP_TEXT_COLOR, ORDER_STATUS_CN_MAP, ORDER_STATUS_ENUM } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
@@ -74,6 +74,7 @@ async function handleOp() {
       }).catch((e) => {
         console.log('订单项设置分享异常', e)
       }).finally(() => {
+        closeToast()
       })
     }
   }
