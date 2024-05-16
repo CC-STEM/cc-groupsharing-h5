@@ -40,6 +40,8 @@ const curMemberInfo = ref<StudentInfoType | null>(null)
 const showAddStudentInfoDialog = ref(false)
 const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
 const isWxReady = ref(false)
+const showShareArrowOverlay = ref(false)
+
 const curLoginInfo = computed(() => {
   return getLoginInfo()
 })
@@ -439,7 +441,7 @@ function changeCard(cardIndex: number) {
 }
 
 function inviteOther() {
-  showToast('请点击页面右上角 ... 发起分享')
+  showShareArrowOverlay.value = true
 }
 
 watchEffect(async () => {
@@ -895,6 +897,9 @@ initWxConfig()
     >
       <StudentInfoForm :cur-info="curMemberInfo" @handle-click-pay="handlePay" />
     </van-dialog>
+    <van-overlay z-index="1000" :show="showShareArrowOverlay" @click="showShareArrowOverlay = false">
+      <img src="@/assets/shareArrow.png" class="shareArrow" alt="">
+    </van-overlay>
   </div>
 </template>
 
@@ -1517,6 +1522,13 @@ initWxConfig()
         }
       }
     }
+  }
+
+  .shareArrow {
+    width: 380px;
+    height: 240px;
+    position: fixed;
+    right: 0;
   }
 }
 
