@@ -1,7 +1,7 @@
 import type { ORDER_STATUS_ENUM } from '@/typing';
 <script setup lang="ts">
 import { computed } from 'vue'
-import { closeToast, showLoadingToast, showSuccessToast, showToast } from 'vant'
+import { showLoadingToast, showSuccessToast } from 'vant'
 import type { MyHistoryOrderInfo } from '@/typing'
 import { ORDER_OP_TEXT, ORDER_OP_TEXT_COLOR, ORDER_STATUS_CN_MAP, ORDER_STATUS_ENUM } from '@/typing'
 import GroupSharingCard from '@/components/GroupSharingCard.vue'
@@ -22,6 +22,7 @@ const orderStatus = computed(() => ORDER_STATUS_CN_MAP[props.orderInfo.status])
 const orderBtnText = computed(() => ORDER_OP_TEXT[props.orderInfo.status])
 const orderTextColor = computed(() => ORDER_OP_TEXT_COLOR[props.orderInfo.status])
 const showWecom = ref(false)
+const showShareArrowOverlay = ref(false)
 
 async function handleOp() {
   // 当前订单为未拼成，提示邀请
@@ -69,11 +70,10 @@ async function handleOp() {
           },
         })
       })]).then(() => {
-        showToast('请点击页面右上角 ... 发起分享')
+        showShareArrowOverlay.value = true
       }).catch((e) => {
         console.log('订单项设置分享异常', e)
       }).finally(() => {
-        closeToast()
       })
     }
   }
@@ -117,6 +117,9 @@ async function handleOp() {
         请联系门店老师使用
       </div><img v-if="curCard?.wecom" class="wecom" :src="curCard.wecom" alt="">
     </van-popup>
+    <van-overlay z-index="1000" :show="showShareArrowOverlay" @click="showShareArrowOverlay = false">
+      <img src="@/assets/shareArrow.png" class="shareArrow" alt="">
+    </van-overlay>
   </div>
 </template>
 
@@ -169,6 +172,13 @@ async function handleOp() {
       position: absolute;
       right: 10px;
     }
+  }
+
+  .shareArrow {
+    width: 380px;
+    height: 240px;
+    position: fixed;
+    right: 0;
   }
 }
 
