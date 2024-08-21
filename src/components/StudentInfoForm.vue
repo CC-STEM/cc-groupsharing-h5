@@ -10,7 +10,7 @@ interface Props {
 const props = defineProps<Props>()
 const curEmits = defineEmits(['handleClickPay'])
 const myForm = ref(null)
-const studentInfo = ref({
+const studentInfo = ref<StudentInfoType>({
   childrenName: '',
   school: '',
   birth: '',

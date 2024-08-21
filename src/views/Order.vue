@@ -105,6 +105,4 @@ watchEffect(async () => {
   font-weight: 500;
   color: #FF460C;
 }
-
-// }
 </style>

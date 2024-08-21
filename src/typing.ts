@@ -60,13 +60,14 @@ export const ORDER_OP_TEXT_COLOR = {
 }
 
 export interface StudentInfoType {
-  childrenName: string
-  school: string
-  birth: string
-  contact: string
-  classTime: number
-  isLearnedCode: number
-  isKnowedCc: number
+  childrenName?: string
+  school?: string
+  birth?: string
+  contact?: string
+  classTime?: number
+  isLearnedCode?: number
+  isKnowedCc?: number
+  gradeType?: number
 }
 
 export interface BaseResponse {
@@ -226,4 +227,18 @@ export type GetHasJoinGroupRes = BaseResponse & {
   data: {
     hasJoin: boolean
   }
+}
+
+export enum GRADE_TYPE_ENUM {
+  PRESCHOOL = 1,
+  PRIMARYLOWGRADE = 2,
+  PRIMARYHIGHGRADE = 3,
+  JUNIORHIGHGRADE = 4, //
+}
+
+export const GRADE_TYPE_CN_MAP = {
+  [GRADE_TYPE_ENUM.PRESCHOOL]: '学前幼儿组',
+  [GRADE_TYPE_ENUM.PRIMARYLOWGRADE]: '小学低年级组',
+  [GRADE_TYPE_ENUM.PRIMARYHIGHGRADE]: '小学高年级组',
+  [GRADE_TYPE_ENUM.JUNIORHIGHGRADE]: '初中组',
 }
