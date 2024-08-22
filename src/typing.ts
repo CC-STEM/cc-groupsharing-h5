@@ -102,13 +102,14 @@ export interface PrepayReq {
 }
 
 export interface AddStudentInfoReq {
-  birth: string
-  childrenName: string
-  classTime: number
-  contact: string
-  isKnowedCc: number
-  isLearnedCode: number
-  school: string
+  birth?: string
+  childrenName?: string
+  classTime?: number
+  contact?: string
+  isKnowedCc?: number
+  isLearnedCode?: number
+  school?: string
+  gradeType?: number
 }
 
 export type PrepayRes = BaseResponse & {
@@ -227,6 +228,10 @@ export type GetHasJoinGroupRes = BaseResponse & {
   data: {
     hasJoin: boolean
   }
+}
+
+export interface GetSignupListRes extends BaseResponse {
+  data: StudentInfoType[]
 }
 
 export enum GRADE_TYPE_ENUM {

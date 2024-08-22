@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import PageView from '@/components/PageView.vue'
 import Podium from '@/assets/podium.png'
 import Gold from '@/assets/gold.png'
@@ -11,58 +12,41 @@ import IpLogo from '@/assets/ip.png'
 import RankFirst from '@/assets/first.png'
 import RankSecond from '@/assets/second.png'
 import RankThird from '@/assets/third.png'
+import { getUserRecommendRank } from '@/services/api'
 
 const getRandomAvatar = () => new URL(`../assets/avatar/${Math.floor(1 + Math.random() * 17)}.jpg`, import.meta.url).href
 const goldAvatar = getRandomAvatar()
 const silverAvatar = getRandomAvatar()
 const copperAvatar = getRandomAvatar()
+const showShareArrowOverlay = ref(false)
+const showFetchLoading = ref(false)
+const route = useRoute()
 
-const curRank = ref<RecommendRankItem[]>([{
-  no: 1,
-  nickName: '黄',
-  mobile: '12345',
-  count: 100,
-  differ: 0,
-  currentUser: false,
-}, {
-  no: 2,
-  nickName: '静',
-  mobile: '12345',
-  count: 100,
-  differ: 0,
-  currentUser: false,
-}, {
-  no: 3,
-  nickName: '远',
-  mobile: '12345',
-  count: 100,
-  differ: 0,
-  currentUser: false,
-}, {
-  no: 4,
-  nickName: '远',
-  mobile: '12345',
-  count: 100,
-  differ: 0,
-  currentUser: false,
-}, {
-  no: 5,
-  nickName: '远',
-  mobile: '12345',
-  count: 100,
-  differ: 0,
-  currentUser: false,
-}, {
-  no: 6,
-  nickName: '远',
-  mobile: '12345',
-  count: 100,
-  differ: 0,
-  currentUser: false,
-}])
+const curRank = ref<RecommendRankItem[]>([
+])
+
+function inviteOther() {
+  showShareArrowOverlay.value = true
+}
+
+const goldInfo = computed(() => curRank.value.find(item => item.no === 1) || null)
+const silverInfo = computed(() => curRank.value.find(item => item.no === 2) || null)
+const copperInfo = computed(() => curRank.value.find(item => item.no === 3) || null)
 const rankImgList = [RankFirst, RankSecond, RankThird]
 const myRankInfo = computed<RecommendRankItem | null>(() => {
   return curRank.value.find(item => item.currentUser) || null
+})
+
+function safeName(info: RecommendRankItem) {
+  return `${info.nickName.slice(0, 1)}**` + `(${info.mobile.slice(-4)})`
+}
+
+watchEffect(async () => {
+  showFetchLoading.value = false
+  const { data: { data: rankList } } = await getUserRecommendRank(route.query.groupBuyingId as string)
+  curRank.value = rankList
+  showFetchLoading.value = true
+  // console.log('res2', res2)
 })
 </script>
 
@@ -74,42 +58,42 @@ const myRankInfo = computed<RecommendRankItem | null>(() => {
         <div class="gold">
           <img class="rankImg" :src="Gold" alt="">
           <div class="avatar" style="border: 3px solid #f4e21a;">
-            <img :src="goldAvatar" alt="">
+            <img v-if="goldInfo" :src="goldAvatar" alt="">
           </div>
-          <div class="msg">
+          <div v-if="goldInfo" class="msg">
             <div class="phone">
-              徐**(1234)
+              {{ safeName(goldInfo) }}
             </div>
             <div class="num">
-              156人
+              {{ goldInfo.count }}人
             </div>
           </div>
         </div>
         <div class="silver">
           <img class="rankImg" :src="Silver" alt="">
           <div class="avatar" style="border: 3px solid #BEC8E4;">
-            <img :src="silverAvatar" alt="">
+            <img v-if="silverInfo" :src="silverAvatar" alt="">
           </div>
-          <div class="msg">
+          <div v-if="silverInfo" class="msg">
             <div class="phone">
-              徐**(1234)
+              {{ safeName(silverInfo) }}
             </div>
             <div class="num">
-              156人
+              {{ silverInfo.count }}人
             </div>
           </div>
         </div>
         <div class="copper">
           <img class="rankImg" :src="Copper" alt="">
           <div class="avatar" style="border: 3px solid #F5B98D;">
-            <img :src="copperAvatar" alt="">
+            <img v-if="copperInfo" :src="copperAvatar" alt="">
           </div>
-          <div class="msg">
+          <div v-if="copperInfo" class="msg">
             <div class="phone">
-              徐**(1234)
+              {{ safeName(copperInfo) }}
             </div>
             <div class="num">
-              156人
+              {{ copperInfo.count }}人
             </div>
           </div>
         </div>
@@ -162,11 +146,14 @@ const myRankInfo = computed<RecommendRankItem | null>(() => {
           <span v-if="myRankInfo">{{ myRankInfo?.count }}</span>
         </div>
         <div class="myRankValue">
-          <span>推荐好友</span>
+          <span @click="inviteOther">推荐好友</span>
         </div>
       </div>
     </div>
   </PageView>
+  <van-overlay z-index="1000" :show="showShareArrowOverlay" @click="showShareArrowOverlay = false">
+    <img src="@/assets/shareArrow.png" class="shareArrow" alt="">
+  </van-overlay>
 </template>
 
 <style lang="less" scoped>

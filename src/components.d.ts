@@ -20,7 +20,6 @@ declare module 'vue' {
     SignupInfoForm: typeof import('./components/SignupInfoForm.vue')['default']
     StudentInfoForm: typeof import('./components/StudentInfoForm.vue')['default']
     VanActionSheet: typeof import('vant/es')['ActionSheet']
-    VanBarrage: typeof import('vant/es')['Barrage']
     VanButton: typeof import('vant/es')['Button']
     VanCellGroup: typeof import('vant/es')['CellGroup']
     VanConfigProvider: typeof import('vant/es')['ConfigProvider']
@@ -28,13 +27,10 @@ declare module 'vue' {
     VanDialog: typeof import('vant/es')['Dialog']
     VanEmpty: typeof import('vant/es')['Empty']
     VanField: typeof import('vant/es')['Field']
-    VanFloatingBubble: typeof import('vant/es')['FloatingBubble']
     VanForm: typeof import('vant/es')['Form']
     VanNavBar: typeof import('vant/es')['NavBar']
     VanOverlay: typeof import('vant/es')['Overlay']
     VanPicker: typeof import('vant/es')['Picker']
     VanPopup: typeof import('vant/es')['Popup']
-    VanSwipe: typeof import('vant/es')['Swipe']
-    VanSwipeItem: typeof import('vant/es')['SwipeItem']
   }
 }

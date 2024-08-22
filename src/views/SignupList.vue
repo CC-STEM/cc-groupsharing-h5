@@ -1,53 +1,69 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { StudentInfoType } from '@/typing'
 import SignupItem from '@/components/Signup/Item.vue'
+import { getSignupList } from '@/services/api'
 
-const studentInfoList = ref<StudentInfoType[]>([{
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}, {
-  childrenName: '黄**',
-  school: '育才小学',
-  gradeType: 1,
-}])
+const route = useRoute()
+const router = useRouter()
+const studentInfoList = ref<StudentInfoType[]>([
+  //   {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }, {
+  //   childrenName: '黄**',
+  //   school: '育才小学',
+  //   gradeType: 1,
+  // }
+])
+
+function handleClickSignup() {
+  const toPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
+  router.push(`/?${toPath}`)
+}
+
+watchEffect(async () => {
+  const { data: { data } } = await getSignupList(route.query.groupBuyingId as string)
+  studentInfoList.value = data
+})
 </script>
 
 <template>
@@ -56,8 +72,8 @@ const studentInfoList = ref<StudentInfoType[]>([{
       <div class="signupList">
         <SignupItem v-for="(item, index) in studentInfoList" :key="index" :student-info="item" />
       </div>
-      <div class="signupBtn">
-        立即报名
+      <div class="signupBtn" @click="handleClickSignup">
+        前往报名
       </div>
     </div>
   </PageView>

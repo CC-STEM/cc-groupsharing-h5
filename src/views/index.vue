@@ -1,55 +1,32 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
 import wx from 'weixin-js-sdk'
-
 import { useRoute, useRouter } from 'vue-router'
+
 import { closeToast, showLoadingToast, showToast } from 'vant'
-import type { GroupOrderInfo, GroupSharingCardInfo, PlayItem, StudentInfoType } from '@/typing'
-import GroupSharingCard from '@/components/GroupSharingCard.vue'
-import JoinGroupAvatarList from '@/components/Card/JoinGroupAvatarList.vue'
-import GroupPlayItem from '@/components/GroupPlayItem.vue'
-import CardDescDetail from '@/components/Card/CardDescDetail.vue'
-import StudentInfoForm from '@/components/StudentInfoForm.vue'
+import type { GroupOrderInfo, GroupSharingCardInfo, StudentInfoType } from '@/typing'
 
-import play1 from '@/assets/play1.png'
-import play2 from '@/assets/play2.png'
-import play3 from '@/assets/play3.png'
-import OrderLogo from '@/assets/order.png'
-import RankLogo from '@/assets/rank.png'
-import mock1 from '@/assets/mock1.png'
-import mock2 from '@/assets/mock2.png'
-
-import DownArrow from '@/assets/downArrow.png'
-import RightArrow from '@/assets/rightArrow.png'
-
-import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getMemberInfo, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
-
-// import { useGroupStateStore } from '@/stores'
-// import { localStorage } from '@/utils/local-storage'
+import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
 import { useWXStateStore } from '@/stores'
-import { calcProgressByCardInfo, clearLoginInfo, generateRandomUserName, getLoginInfo } from '@/utils/index'
+
+import { clearLoginInfo, getLoginInfo } from '@/utils/index'
+
+import SignupInfoForm from '@/components/SignupInfoForm.vue'
+import PageView from '@/components/PageView.vue'
+
+const realActivityMsg = ref('杨** 刚刚报名参加了活动')
+const showSignupInfoDialog = ref(false)
 
 const wxAppID = 'wx65b4e85b0e8a6b93'
 const wxStateStore = useWXStateStore()
 const router = useRouter()
 const route = useRoute()
-const shopName = ref('门店名称')
-const groupSharingStatus = ref('开团中')
+
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
-const curMemberInfo = ref<StudentInfoType | null>(null)
-const showAddStudentInfoDialog = ref(false)
 const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
 const isWxReady = ref(false)
-const showShareArrowOverlay = ref(false)
-
 const curLoginInfo = computed(() => {
   return getLoginInfo()
-})
-
-const groupShareUserName = computed(() => {
-  const query = route.query
-  // 手机号需只保留后四位
-  return query.shareUser.slice(7) || ''
 })
 
 const isSharedGroup = computed(() => {
@@ -60,37 +37,11 @@ const isSharedGroup = computed(() => {
   return false
 })
 
-const firstTitle = computed(() => {
-  // 区分已发起拼团和未发起的情况（管理员初始配置）
-  if (isSharedGroup.value)
-    return '参与拼团'
-
-  return '发起拼团'
-})
-
-const secondTitle = computed(() => {
-  if (!isSharedGroup.value)
-    return '快呼唤您的小伙伴一起参加吧'
-
-  return groupShareUserName.value ? `${groupShareUserName.value} 邀请您来参与拼团啦！` : ''
-})
-
 const cardList = ref<GroupSharingCardInfo[]>([
 ])
-// const { setGroupBuyingCardInfo } = useGroupStateStore()
-
-// const curSharedGroupInfo = ref()
 
 const curSelectedCard = ref<GroupSharingCardInfo | null>(null)
 const curBuyStatus = ref<number>(0) // 0 拼团 1 单独买
-
-// const scrollRef = ref(null)
-const showCardDetailSheetOption = ref({
-  show: false,
-})
-
-const orderLogoOffset = ref({ x: 0, y: 300 })
-const rankLogoOffset = ref({ x: 0, y: 400 })
 
 const shareInfo = computed(() => {
   const lastShareUser = route.query.shareUser
@@ -114,147 +65,44 @@ const shareInfo = computed(() => {
     return {
       imgUrl: curSelectedCard.value.shareImgUrl || 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
       link: shareLink,
-      desc: curSelectedCard.value.shareSubTitle || '拼团活动期间，用户可在公众号网页发起拼团', // subTitle
-      title: curSelectedCard.value.shareTitle || '邀好友一起拼', // title
+      desc: curSelectedCard.value.shareSubTitle || '报名活动期间，用户可在公众号网页发起报名', // subTitle
+      title: curSelectedCard.value.shareTitle || '邀好友参加报名', // title
     }
   }
   return {
     imgUrl: 'https://jkc-1313504415.cos.ap-shanghai.myqcloud.com/wxh5_static%2FsharePic.png',
     link: shareLink,
-    desc: '拼团活动期间，用户可在公众号网页发起拼团', // subTitle
-    title: '邀好友一起拼', // title
+    desc: '报名活动期间，用户可在公众号网页发起报名', // subTitle
+    title: '邀好友参加报名', // title
   }
 })
 
-const playList = computed<PlayItem[]>(() => {
+// 报名 == 拼团中的参团
+async function handleJoinGroup() {
+  // 检查当前是否有登录态
+  const loginInfo = getLoginInfo()
+  if (!(loginInfo?.token)) {
+    router.push(`/PhoneLogin?${curPath}`)
+    return
+  }
+
+  // 检查当前是否已参加过活动 : TODO:
   if (curSelectedCard.value) {
-    return [{
-      imgUrl: play1,
-      title: '开团/参团',
-      subTitle: '拼团享低价',
-    }, {
-      imgUrl: play2,
-      title: '邀请新用户参团',
-      subTitle: '分享优惠多',
-    }, {
-      imgUrl: play3,
-      title: `${curSelectedCard.value.groupBuyingType === 2 ? '百' : curSelectedCard.value.number}人成团`,
-      subTitle: '',
-    }]
-  }
-  return [{
-    imgUrl: play1,
-    title: '开团/参团',
-    subTitle: '拼团享低价',
-  }, {
-    imgUrl: play2,
-    title: '邀请新用户参团',
-    subTitle: '分享优惠多',
-  }, {
-    imgUrl: play3,
-    title: `*人成团`,
-    subTitle: '',
-  }]
-})
-
-// 百人团相关虚拟信息
-
-// 参团人数（件数），计算规则 已经过时间/总时间 * 100 + 实际件数
-// 最近用户信息 头像 用户名 参团时间（xx分钟前） 均随机
-const hundredGroupJoinPercent = ref(0)
-const clockTime = ref('')
-const randomJoinUsers = ref<{ id: number, text: string }[]>([])
-let refreshProgressTimer = null
-let refreshRemainTimer = null
-let refreshJoinUserTimer = null
-let refreshAvatarTimer = null
-const isHundredGroup = computed(() => curSelectedCard.value?.groupBuyingType === 2) // 是否百人团形式
-
-// 刷新剩余时间
-watch(curSelectedCard, (newVal) => {
-  if (newVal) {
-    refreshRemainTimer !== null && clearInterval(refreshRemainTimer)
-    refreshRemainTimer = setInterval(() => {
-      const remainInfo = calcProgressByCardInfo(newVal)
-      if (remainInfo.percent === 100) {
-        clearInterval(refreshRemainTimer)
-        clockTime.value = remainInfo.remain
+    try {
+      const { data: { data } } = await checkIsInGroup(curSelectedCard.value.id)
+      console.log('checkIsInGroup res', data)
+      if (data.hasJoin) {
+        showToast('已参与该活动,不可重复参加!')
         return
       }
-      clockTime.value = remainInfo.remain
-    }, 1000)
+    }
+    catch (e) {
+      console.log('checkIsInGroup err', e)
+    }
   }
-  else {
-    refreshRemainTimer !== null && clearInterval(refreshRemainTimer)
-  }
-})
 
-// 刷新已参加人数
-watch(curSelectedCard, (newVal) => {
-  if (newVal) {
-    refreshProgressTimer !== null && clearInterval(refreshProgressTimer)
-    refreshProgressTimer = setInterval(() => {
-      hundredGroupJoinPercent.value = calcProgressByCardInfo(newVal).percent
-    }, 10 * 60 * 1000)
-  }
-  else {
-    refreshProgressTimer !== null && clearInterval(refreshProgressTimer)
-  }
-})
-
-// 刷新随机参团人
-watch(curSelectedCard, (newVal) => {
-  if (newVal) {
-    refreshJoinUserTimer !== null && clearInterval(refreshJoinUserTimer)
-    refreshJoinUserTimer = setInterval(() => {
-      const curRandomUserName = generateRandomUserName()
-      randomJoinUsers.value = [{ id: new Date().getTime(), text: `用户 ${curRandomUserName}   ${Math.floor(Math.random() * 60)}分钟前参与拼团` }]
-    }, (5 + Math.round(Math.random() * 5)) * 1000)
-  }
-  else {
-    refreshJoinUserTimer !== null && clearInterval(refreshJoinUserTimer)
-  }
-})
-
-const secondAvatarList = ref([])
-
-// 刷新参团头像
-watch(curSelectedCard, (newVal) => {
-  if (newVal) {
-    refreshAvatarTimer !== null && clearInterval(refreshAvatarTimer)
-    refreshAvatarTimer = setInterval(() => {
-      secondAvatarList.value = []
-      for (let i = 0; i < 5; i++) {
-        secondAvatarList.value.push({
-          type: 'AVATAR',
-          url: new URL(`../assets/avatar/${6 + Math.floor(Math.random() * 17)}.jpg`, import.meta.url).href,
-        })
-      }
-    }, (5 + Math.round(Math.random() * 5)) * 1000)
-  }
-  else {
-    refreshAvatarTimer !== null && clearInterval(refreshAvatarTimer)
-  }
-})
-
-const realtimeProgress = computed(() => {
-  if (curSelectedCard.value) {
-    const info = calcProgressByCardInfo(curSelectedCard.value)
-    return info
-  }
-  return null
-})
-
-const firstAvatarList = [{
-  type: 'AVATAR',
-  url: mock1,
-}]
-
-for (let i = 1; i <= 5; i++) {
-  firstAvatarList.push({
-    type: 'AVATAR',
-    url: new URL(`../assets/avatar/${i}.jpg`, import.meta.url).href,
-  })
+  showSignupInfoDialog.value = true
+  curBuyStatus.value = 0
 }
 
 function logout() {
@@ -262,25 +110,33 @@ function logout() {
   router.push('/PhoneLogin')
 }
 
-function clickDetail(curCard: GroupSharingCardInfo) {
-  console.log('click---')
-  showCardDetailSheetOption.value = { show: true }
-  curSelectedCard.value = curCard
-}
-
-function handleClickRank() {
+function handleClickSignupList() {
   if (!route.query.groupBuyingId) {
     if (curSelectedCard.value) {
       const groupBuyingId = curSelectedCard.value.id
-      router.push(`/Rank?${curPath}&groupBuyingId=${groupBuyingId}`)
+      router.push(`/SignupList?${curPath ? `${curPath}&` : ''}groupBuyingId=${groupBuyingId}`)
       return
     }
   }
-  router.push(`/Rank?${curPath}`)
+  router.push(`/SignupList?${curPath}`)
+}
+
+// 跳转推荐量排名列表
+function handleClickRecommendList() {
+  console.log('curPath', curPath)
+  if (!route.query.groupBuyingId) {
+    if (curSelectedCard.value) {
+      const groupBuyingId = curSelectedCard.value.id
+      router.push(`/RecommendList?${curPath ? `${curPath}&` : ''}groupBuyingId=${groupBuyingId}`)
+      return
+    }
+  }
+  router.push(`/RecommendList?${curPath}`)
 }
 
 // 支付
 async function handlePay(studentInfo: StudentInfoType) {
+  console.log('studentInfo', studentInfo)
   // 补充用户信息
   try {
     const res = await addStudentInfo({
@@ -347,15 +203,15 @@ async function handlePay(studentInfo: StudentInfoType) {
                 console.log('curBuyStatus', curBuyStatus.value)
                 // 跳转到主页  如果是单买则不带订单id跳转
                 if (curBuyStatus.value === 0) {
-                  showToast('购买成功，前往我的订单查看')
+                  showToast('报名成功')
                   router.push(`/?groupBuyingOrderId=${orderId}&shareUser=${query.shareUser}`)
                 }
 
                 if (curBuyStatus.value === 1) {
-                  showToast('购买成功，前往我的订单查看')
+                  showToast('报名成功')
                   router.push(`/?shareUser=${query.shareUser}`)
                 }
-                showAddStudentInfoDialog.value = false
+                showSignupInfoDialog.value = false
               }
             },
             // 支付取消回调函数
@@ -379,71 +235,6 @@ async function handlePay(studentInfo: StudentInfoType) {
   }
 }
 
-// 0 发起拼团 or 1 单独购买
-async function handleBuy(buyStatus: number) {
-  // 检查当前是否有登录态
-  const loginInfo = getLoginInfo()
-  if (!(loginInfo?.token)) {
-    router.push(`/PhoneLogin?${curPath}`)
-    return
-  }
-
-  // 检查当前是否已参加过活动 : TODO:
-  if (curSelectedCard.value) {
-    try {
-      const { data: { data } } = await checkIsInGroup(curSelectedCard.value.id)
-      console.log('checkIsInGroup res', data)
-      if (data.hasJoin) {
-        showToast('已参与该拼团活动,不可重复参加!')
-        return
-      }
-    }
-    catch (e) {
-      console.log('checkIsInGroup err', e)
-    }
-  }
-
-  showAddStudentInfoDialog.value = true
-  curBuyStatus.value = buyStatus
-}
-
-// 参团
-async function handleJoinGroup() {
-  // 检查当前是否有登录态
-  const loginInfo = getLoginInfo()
-  if (!(loginInfo?.token)) {
-    router.push(`/PhoneLogin?${curPath}`)
-    return
-  }
-
-  // 检查当前是否已参加过活动 : TODO:
-  if (curSelectedCard.value) {
-    try {
-      const { data: { data } } = await checkIsInGroup(curSelectedCard.value.id)
-      console.log('checkIsInGroup res', data)
-      if (data.hasJoin) {
-        showToast('已参与该拼团活动,不可重复参加!')
-        return
-      }
-    }
-    catch (e) {
-      console.log('checkIsInGroup err', e)
-    }
-  }
-
-  showAddStudentInfoDialog.value = true
-  curBuyStatus.value = 0
-}
-
-function changeCard(cardIndex: number) {
-  console.log('changeCard', cardIndex)
-  curSelectedCard.value = cardList.value[cardIndex]
-}
-
-function inviteOther() {
-  showShareArrowOverlay.value = true
-}
-
 watchEffect(async () => {
   const query = route.query
   console.log('routeParams', query)
@@ -455,7 +246,6 @@ watchEffect(async () => {
       ...item,
       width: 618,
     }))
-    shopName.value = data.groupBuyingInfo.storeName
     curSelectedCard.value = data.groupBuyingInfo
   }
   else {
@@ -465,17 +255,9 @@ watchEffect(async () => {
       ...item,
       width: 618,
     }))
-    if (cardList.value.length) {
-      shopName.value = cardList.value[0].storeName
+    if (cardList.value.length)
       curSelectedCard.value = cardList.value[0]
-    }
   }
-})
-
-watchEffect(async () => {
-  const { data: { data } } = await getMemberInfo()
-  console.log('getMemberInfo', data)
-  curMemberInfo.value = data
 })
 
 watch([shareInfo, isWxReady], (newVal) => {
@@ -646,922 +428,157 @@ initWxConfig()
 </script>
 
 <template>
-  <div class="container">
-    <van-floating-bubble
-      v-model:offset="orderLogoOffset" axis="xy" :icon="OrderLogo" magnetic="x"
-      @click="router.push(`/Order?${curPath}`)"
-    />
-    <van-floating-bubble
-      v-model:offset="rankLogoOffset" axis="xy" :icon="RankLogo" magnetic="x"
-      @click="handleClickRank"
-    />
-    <div class="header">
-      <div style="position: relative;">
-        <img class="adImg" src="@/assets/ad.png">
-        <div v-if="isHundredGroup" class="configHeaderTitle">
-          <div />{{ curSelectedCard?.title }}
-          <div />
-        </div>
-      </div>
-      <div class="sharingBar">
-        <div class="left">
-          <span>{{ shopName }}</span>
-        </div>
-        <div class="right">
-          <span>{{ groupSharingStatus }}</span>
-        </div>
-      </div>
-      <div class="cardContainertest">
-        <van-swipe class="my-swipe" indicator-color="white" @change="changeCard">
-          <van-swipe-item v-for="(item, index) in cardList" :key="index">
-            <GroupSharingCard
-              class="sharingCard" :is-active-style="true" :card-info="item"
-              @detail-click="clickDetail(item)"
-            />
-          </van-swipe-item>
-        </van-swipe>
-      </div>
+  <PageView :has-nav-bar="true" title="活动名称" style="height: 100vh">
+    <div v-if="curLoginInfo" class="logout" @click="logout">
+      退出
     </div>
-    <div class="content">
-      <template v-if="curSelectedCard">
-        <template v-if="!isHundredGroup">
-          <div class="contentTitle">
-            <div class="firstTitle">
-              {{ firstTitle }}
-            </div>
-            <div class="secondTitle">
-              {{ secondTitle }}
-            </div>
-          </div>
-          <div class="joinGroup">
-            <JoinGroupAvatarList
-              v-if="curSelectedCard" :number="curSelectedCard.number"
-              :current-number="curGroupOrderInfo?.currentNumber" :is-support-add="true"
-            />
-            <div v-if="!isSharedGroup" class="createGrougBtnList">
-              <div class="singleBuyBtn">
-                <div class="price">
-                  ￥{{ curSelectedCard?.price }}
-                </div>
-                <div class="desc" @click="handleBuy(1)">
-                  单独购买
-                </div>
-              </div>
-              <div class="createGroupBtn">
-                <div class="price">
-                  ￥{{ curSelectedCard?.groupBuyingPrice }}
-                </div>
-                <div class="desc" @click="handleBuy(0)">
-                  发起拼团
-                </div>
-              </div>
-            </div>
-            <div v-if="isSharedGroup && curGroupOrderInfo" class="btnList">
-              <template v-if="curSelectedCard && (Date.now() > new Date(curSelectedCard.endTime).getTime())">
-                <div class="groupTips">
-                  该拼团已结束！
-                </div>
-                <div class="joinGroupBtn" @click="() => { }">
-                  <div class="desc">
-                    我知道了
-                  </div>
-                </div>
-              </template>
-              <template
-                v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber === curSelectedCard.number"
-              >
-                <div class="groupTips">
-                  当前团已满员！
-                </div>
-                <div class="joinGroupBtn" @click="() => { }">
-                  <div class="desc">
-                    前往活动主页发起新团
-                  </div>
-                </div>
-              </template>
-              <template
-                v-if="curSelectedCard && (Date.now() <= new Date(curSelectedCard.endTime).getTime()) && curGroupOrderInfo.currentNumber < curSelectedCard.number"
-              >
-                <div v-if="curGroupOrderInfo.isInOrder" class="groupTips">
-                  您已成功加入该团！
-                </div>
-                <div v-if="curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="inviteOther">
-                  <div class="desc">
-                    邀请好友
-                  </div>
-                </div>
-                <div v-if="!curGroupOrderInfo.isInOrder" class="joinGroupBtn" @click="handleJoinGroup">
-                  <div class="desc">
-                    立即参团
-                  </div>
-                  <div class="price">
-                    ￥{{ curSelectedCard.groupBuyingPrice }}
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <template v-if="curSelectedCard">
-            <template v-if="!isSharedGroup">
-              <div class="joinHundredGroupBtn" @click="handleJoinGroup">
-                <div>
-                  <div class="new">
-                    <div class="desc">
-                      立即参团
-                    </div>
-                    <div class="price">
-                      ￥{{ curSelectedCard.groupBuyingPrice }}
-                    </div>
-                  </div>
-                  <div class="old">
-                    <div class="desc">
-                      原价
-                    </div>
-                    <div class="price">
-                      ￥{{ curSelectedCard.price }}
-                    </div>
-                  </div>
-                </div>
-              </div>
+    <div class="activityContainer">
+      <div class="realmsg">
+        {{ realActivityMsg }}
+      </div>
+      <img v-if="curSelectedCard" :src="curSelectedCard.rules" alt="">
+    </div>
+    <div class="toolbar">
+      <div class="rankAndSignList">
+        <span @click="handleClickRecommendList">推荐好友排名</span>
+        <div class="signupListBtn" @click="handleClickSignupList">
+          报名列表
+        </div>
+      </div>
+      <div class="signupBtn">
+        <template v-if="curSelectedCard">
+          <template v-if="!isSharedGroup">
+            <span @click="handleJoinGroup">立即报名</span>
+          </template>
+          <template v-else>
+            <template v-if="(Date.now() > new Date(curSelectedCard.endTime).getTime())">
+              <span>报名已结束</span>
             </template>
-            <template v-else>
-              <template v-if="(Date.now() > new Date(curSelectedCard.endTime).getTime())">
-                <div class="joinHundredGroupBtn">
-                  <div class="desc">
-                    该拼团已结束！
-                  </div>
-                </div>
-              </template>
-              <template v-else-if="curGroupOrderInfo">
-                <template v-if="curGroupOrderInfo.isInOrder">
-                  <div class="joinHundredGroupBtn" @click="inviteOther">
-                    <div class="desc">
-                      邀请好友
-                    </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="joinHundredGroupBtn" @click="handleJoinGroup">
-                    <div>
-                      <div class="new">
-                        <div class="desc">
-                          立即参团
-                        </div>
-                        <div class="price">
-                          ￥{{ curSelectedCard.groupBuyingPrice }}
-                        </div>
-                      </div>
-                      <div class="old">
-                        <div class="desc">
-                          原价
-                        </div>
-                        <div class="price">
-                          ￥{{ curSelectedCard.price }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </template>
+            <template v-else-if="curGroupOrderInfo">
+              <span v-if="curGroupOrderInfo.isInOrder">已报名</span>
+              <span v-else @click="handleJoinGroup">立即报名</span>
             </template>
           </template>
-
-          <div class="hundredGroupContainer">
-            <div v-if="realtimeProgress" class="clock">
-              <span>{{ realtimeProgress.percent + 8 }}</span> 人已拼 <span>{{
-                realtimeProgress.percent + 8 }}</span>
-              件，<span>{{ clockTime }}</span> 后结束
-            </div>
-            <div class="hundredAvatarList">
-              <div class="first">
-                <img v-for="(item, index) in firstAvatarList" :key="index" :src="item.url" class="avatarImg">
-              </div>
-              <div class="second">
-                <div><img :src="mock2"></div>
-                <img v-for="(item, index) in secondAvatarList" :key="index" :src="item.url" class="avatarImg">
-              </div>
-            </div>
-            <div class="bar" />
-            <van-barrage v-model="randomJoinUsers" :rows="1" :duration="5000">
-              <div style="width:100%;height: 100%" />
-            </van-barrage>
-            <!-- <div class="latestJoin">
-              <img :src="latestUserAvatar" />
-              <span>用户 {{ latestUserName }} {{ latestTime }} 分钟前参与拼单</span>
-            </div> -->
-          </div>
         </template>
-      </template>
-      <div class="joinGroupPlay">
-        <div class="top">
-          <div class="name">
-            拼团玩法 <img class="downArrow" :src="DownArrow" alt="">
-          </div>
-          <div class="orders" @click="() => { router.push(`/Order?${curPath}`) }">
-            我的拼团订单 <img class="rightArrow" :src="RightArrow" alt="">
-          </div>
-          <div v-if="curLoginInfo" class="logout" @click="logout">
-            退出
-          </div>
-        </div>
-        <div class="playContent">
-          <GroupPlayItem
-            v-for="(item, index) in playList" :key="index" :img-url="item.imgUrl" :title="item.title"
-            :sub-title="item.subTitle"
-          />
-        </div>
-      </div>
-      <div class="joinGroupRule">
-        <div class="top">
-          <div class="name">
-            拼团规则 <img class="downArrow" :src="DownArrow" alt="">
-          </div>
-        </div>
-        <div class="ruleContent">
-          <img v-if="curSelectedCard" class="ruleImg" :src="curSelectedCard.rules" alt="">
-        </div>
-      </div>
-      <div class="contentFooter">
-        本活动最终解释权归CC编程所有
       </div>
     </div>
-    <CardDescDetail
-      v-if="curSelectedCard" v-model:show-option="showCardDetailSheetOption"
-      :cur-selected-card="curSelectedCard"
-    />
-    <van-dialog
-      v-model:show="showAddStudentInfoDialog" :close-on-click-overlay="true" width="100%"
-      :show-confirm-button="false" :show-cancel-button="false"
-    >
-      <StudentInfoForm :cur-info="curMemberInfo" @handle-click-pay="handlePay" />
-    </van-dialog>
-    <van-overlay z-index="1000" :show="showShareArrowOverlay" @click="showShareArrowOverlay = false">
-      <img src="@/assets/shareArrow.png" class="shareArrow" alt="">
-    </van-overlay>
-  </div>
+  </PageView>
+  <van-dialog
+    v-model:show="showSignupInfoDialog" :close-on-click-overlay="true" width="100%"
+    style="margin-top:30px;overflow-y: scroll;height: 90%;" :show-confirm-button="false" :show-cancel-button="false"
+  >
+    <SignupInfoForm @handle-click-pay="handlePay" />
+  </van-dialog>
 </template>
 
 <style lang="less" scoped>
-:deep(.van-action-sheet) {
-  align-items: center;
+.activityContainer {
+  position: relative;
+  width: 100%;
+  height: auto;
 
-  .detailTitle {
-    max-width: 618px;
-    font-size: 30px;
+  .realmsg {
+    text-align: center;
+    line-height: 50px;
+    height: 23px;
+    font-family: PingFang SC;
+    font-weight: 400;
+    font-size: 24px;
+    color: #FFFFFF;
+
+    position: absolute;
+    top: 45px;
+    left: 21px;
+    width: 325px;
+    height: 50px;
+    background: #000000;
+    border-radius: 25px;
+    opacity: 0.74;
+  }
+
+  img {
+    width: 100vw;
+    height: auto;
+  }
+}
+
+.toolbar {
+  border-radius: 20px 20px 0px 0px;
+  background-color: white;
+  width: 100%;
+  height: 160px;
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  .rankAndSignList {
+    width: 392px;
+    height: 82px;
+    background: #FF5400;
+    border-radius: 41px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    span {
+      line-height: 25px;
+      margin-left: 22px;
+      height: 25px;
+      font-family: PingFang SC;
+      font-weight: 800;
+      font-size: 26px;
+      color: #FFFFFF;
+    }
+
+    .signupListBtn {
+      width: 208px;
+      height: 100%;
+      background: #000000;
+      border-radius: 41px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 25px;
+      font-family: PingFang SC;
+      font-weight: 800;
+      font-size: 26px;
+      color: #FFFFFF;
+    }
+  }
+
+  .signupBtn {
+    width: 276px;
+    height: 82px;
+    background: #FFD925;
+    border-radius: 41px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    line-height: 29px;
     font-family: PingFang SC;
     font-weight: 800;
+    font-size: 30px;
     color: #000000;
-    margin-top: 39px;
-    margin-bottom: 25px;
-  }
-
-  .detailDesc {
-    max-width: 618px;
-    font-size: 28px;
-    font-family: PingFang SC;
-    font-weight: 500;
-    color: #000000;
-    margin-bottom: 97px;
   }
 }
 
-:deep(.van-action-sheet__header) {
-  font-size: 40px;
+.logout {
+  position: fixed;
+  z-index: 999;
+  right: 0px;
+  // top: 50vh;
+  text-align: center;
+  width: 82px;
+  height: 39px;
+  background: #141414;
+  border-radius: 20px;
+  font-size: 26px;
   font-family: PingFang SC;
-  font-weight: 800;
-  color: #000000;
-  margin-top: 50px;
-  margin-bottom: 43px;
-}
-
-:deep(.van-action-sheet__cancel) {
-  width: 622px;
-  height: 88px;
-  // background: linear-gradient(90deg, #FABC4F, #FF3A05);
-  border: 1px solid #FF3E07;
-  // border-image: linear-gradient(0deg, #FF3E07, #FAB84D) 1 1;
-  border-radius: 44px;
-
-  font-size: 30px;
-  font-family: PingFang SC;
-  font-weight: 500;
-  color: #FF460C;
-}
-
-.container {
-  width: 750px;
-  // width: 100vw;
-  // height: 2281px;
-  position: relative;
-  background-image: url('@/assets/shareBackgroundTop.png');
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-
-  .header {
-    height: 30%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-
-    .adImg {
-      width: 100%;
-    }
-
-    .configHeaderTitle {
-      position: absolute;
-      left: 30px;
-      bottom: 30px;
-      font-family: PingFang SC;
-      font-weight: bold;
-      font-size: 24px;
-      color: #FED7B1;
-      display: flex;
-      align-items: center;
-
-      div {
-        width: 29px;
-        height: 2px;
-        background: #FED7B1;
-        margin: 0 8px;
-      }
-    }
-
-    .sharingBar {
-      width: 695px;
-      height: 71.6px;
-      background: #FFFFFF;
-      border-radius: 36px;
-      display: flex;
-
-      .left {
-        position: relative;
-        width: 500px;
-        height: 100%;
-        background: #E43E12;
-        border-bottom-left-radius: 36px;
-        border-top-left-radius: 36px;
-        display: flex;
-        align-items: center;
-
-        span {
-          margin-left: 40px;
-          font-size: 32px;
-          font-family: PingFang SC;
-          font-weight: 800;
-          color: #FFFFFF;
-        }
-      }
-
-      .left::after {
-        content: ' ';
-        position: absolute;
-        top: 0;
-        right: -35px;
-        border-width: 71.6px 35px;
-        border-style: solid;
-        border-color: #E43E12 transparent transparent transparent;
-      }
-
-      .right {
-        height: 100%;
-        width: calc(100% - 500px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        span {
-          font-size: 36px;
-          font-family: youshe;
-          font-weight: 400;
-          color: #E43E12;
-        }
-      }
-    }
-
-    .cardContainertest {
-      white-space: nowrap;
-      width: 100%;
-      // overflow-x: scroll;
-      height: 336px;
-      // display: flex;
-      // flex-direction: column;
-      // justify-content: center;
-      // align-items: center;
-    }
-
-    .cardContainer {
-      white-space: nowrap;
-      width: 100%;
-      overflow-x: scroll;
-      height: 336px;
-
-      .subContainer {
-        float: left;
-        // position: absolute;
-        height: 336px;
-        display: flex;
-        // float: left;
-        align-items: center;
-
-        // margin: auto;
-        // left: -50%;
-        // justify-content: center;
-        .sharingCard {
-          margin: 0 15px;
-        }
-      }
-    }
-
-    .shareBtn {
-      position: absolute;
-      top: 104px;
-      right: 0px;
-      width: 87px;
-      height: 47px;
-      background: linear-gradient(90deg, #FFBD4A, #FFAA25, #FF4F0A);
-      box-shadow: 0px 1px 25px 2px rgba(0, 0, 0, 0.26);
-      border-top-left-radius: 24px;
-      border-bottom-left-radius: 24px;
-      font-size: 28px;
-      font-family: PingFang SC;
-      font-weight: bold;
-      color: #FFFFFF;
-      text-align: center;
-      line-height: 47px;
-    }
-  }
-
-  .content {
-    // height: 70%;
-    background-image: url('@/assets/shareBackground.png');
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .contentTitle {
-      padding-top: 40px;
-      padding-bottom: 27px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-
-      .firstTitle {
-        font-size: 40px;
-        font-family: PingFang SC;
-        font-weight: 800;
-        color: #FFFFFF;
-      }
-
-      .secondTitle {
-        font-size: 28px;
-        font-family: PingFang SC;
-        font-weight: 800;
-        color: #FFFFFF;
-      }
-    }
-
-    .joinGroup {
-      width: 700px;
-      height: 385px;
-      background: #FFFFFF;
-      border-radius: 30px;
-      margin-bottom: 22px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding-top: 37px;
-
-      .createGrougBtnList {
-        margin-top: 51px;
-        height: 88px;
-        width: auto;
-        display: flex;
-
-        .singleBuyBtn {
-          width: 320px;
-          height: 88px;
-          // background: linear-gradient(90deg, #FABC4F, #FF3A05);
-          border: 1px solid #FF3E07;
-          // border-image: linear-gradient(0deg, #FF3E07, #FAB84D) 1 1;
-          border-radius: 44px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: space-around;
-          margin-right: 12px;
-
-          .price {
-            // height: 28px;
-            font-size: 36px;
-            font-family: PingFang SC;
-            font-weight: 800;
-            color: #FF460C;
-            // margin-bottom: 12px;
-          }
-
-          .desc {
-            // height: 23px;
-            font-size: 24px;
-            font-family: PingFang SC;
-            font-weight: 500;
-            color: #FF460C;
-          }
-        }
-
-        .createGroupBtn {
-          width: 320px;
-          height: 88px;
-          background: linear-gradient(179deg, #FFE691, #FF3A05);
-          border-radius: 44px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: space-around;
-
-          .price {
-            // height: 28px;
-            font-size: 36px;
-            font-family: PingFang SC;
-            font-weight: 800;
-            color: #FFFFFF;
-          }
-
-          .desc {
-            // height: 23px;
-            font-size: 24px;
-            font-family: PingFang SC;
-            font-weight: 500;
-            color: #FFFFFF;
-          }
-        }
-      }
-
-      .btnList {
-        margin-top: 51px;
-        // height: 88px;
-        width: auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-
-        .groupTips {
-          font-size: 28px;
-          font-family: PingFang SC;
-          font-weight: bold;
-          color: #000000;
-          margin-bottom: 29px;
-        }
-
-        .joinGroupBtn {
-          display: flex;
-          // flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: 637px;
-          height: 88px;
-          background: linear-gradient(179deg, #FFE691, #FF3A05);
-          border-radius: 44px;
-
-          .price {
-            font-size: 36px;
-            font-family: PingFang SC;
-            font-weight: 800;
-            color: #FFFFFF;
-          }
-
-          .desc {
-            font-size: 24px;
-            font-family: PingFang SC;
-            font-weight: 500;
-            color: #FFFFFF;
-          }
-        }
-      }
-    }
-
-    .joinGroupPlay {
-      width: 700px;
-      height: 330px;
-      background: #FFFFFF;
-      border-radius: 30px;
-      margin-bottom: 24px;
-      display: flex;
-      // justify-content: center;
-      flex-direction: column;
-      align-items: center;
-
-      .top {
-        margin-top: 39px;
-        width: 648px;
-        display: flex;
-        justify-content: space-between;
-
-        .name {
-          height: 31px;
-          font-size: 32px;
-          font-family: PingFang SC;
-          font-weight: 800;
-          color: #1A1A1A;
-          position: relative;
-
-          .downArrow {
-            width: 40px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: -30px;
-          }
-        }
-
-        .orders {
-          // height: 27px;
-          // line-height: 27px;
-          font-size: 28px;
-          font-family: PingFang SC;
-          font-weight: 800;
-          color: #1A1A1A;
-          position: relative;
-          margin-right: 26px;
-
-          .rightArrow {
-            // width: 20px;
-            // height: 20px;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-          }
-        }
-
-        .logout {
-          text-align: center;
-          width: 82px;
-          height: 39px;
-          background: #141414;
-          border-radius: 20px;
-          font-size: 26px;
-          font-family: PingFang SC;
-          font-weight: bold;
-          color: #FFFFFF;
-        }
-      }
-
-      .playContent {
-        margin-top: 28px;
-        width: 648px;
-        display: flex;
-        justify-content: space-between;
-      }
-    }
-
-    .joinGroupRule {
-      width: 700px;
-      max-height: 1100px;
-      background: #FFFFFF;
-      border-radius: 30px;
-      margin-bottom: 24px;
-      display: flex;
-      // justify-content: center;
-      flex-direction: column;
-      align-items: center;
-
-      .top {
-        margin-top: 39px;
-        margin-bottom: 53px;
-        width: 648px;
-        display: flex;
-        justify-content: space-between;
-
-        .name {
-          height: 31px;
-          font-size: 32px;
-          font-family: PingFang SC;
-          font-weight: 800;
-          color: #1A1A1A;
-          position: relative;
-
-          .downArrow {
-            width: 40px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: -30px;
-          }
-        }
-      }
-
-      .ruleContent {
-        width: 648px;
-        overflow-y: scroll;
-        overscroll-behavior-y: contain;
-
-        // font-size: 24px;
-        // font-family: PingFang SC;
-        // font-weight: 400;
-        // color: #666666;
-        .ruleImg {
-          width: 100%;
-          height: auto
-        }
-      }
-    }
-
-    .contentFooter {
-      font-size: 24px;
-      font-family: PingFang SC;
-      font-weight: 400;
-      color: #E43E12;
-    }
-
-    .joinHundredGroupBtn {
-      display: flex;
-      // flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 709px;
-      height: 106px;
-      // background: linear-gradient(179deg, #FFE691, #FF3A05);
-      background-image: url('@/assets/buyBtn.png');
-      background-size: 100% 100%;
-      border-radius: 44px;
-      margin-top: 21px;
-      margin-bottom: 18px;
-
-      div:first-child {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-
-        .new {
-          display: flex;
-          flex-direction: row;
-
-          .price {
-            font-size: 36px;
-            font-family: PingFang SC;
-            font-weight: 800;
-            color: #FFFFFF;
-          }
-
-          .desc {
-            font-size: 24px;
-            font-family: PingFang SC;
-            font-weight: 500;
-            color: #FFFFFF;
-          }
-        }
-
-        .old {
-          display: flex;
-          flex-direction: row;
-
-          .price,
-          .desc {
-            font-family: PingFang SC;
-            font-weight: bold;
-            font-size: 24px;
-            color: #FFDFDA;
-            text-decoration-line: line-through;
-          }
-        }
-      }
-    }
-
-    .hundredGroupContainer {
-      width: 700px;
-      height: 379px;
-      background: #FFFFFF;
-      border-radius: 30px;
-      margin-bottom: 22px;
-      display: flex;
-      flex-direction: column;
-      // justify-content: center;
-      align-items: center;
-
-      .clock {
-        margin-top: 30px;
-        font-family: PingFang SC;
-        font-weight: 500;
-        font-size: 24px;
-        color: #1C1C1C;
-
-        span {
-          font-family: PingFang SC;
-          font-weight: 800;
-          font-size: 24px;
-          color: #EE4A14;
-        }
-      }
-
-      .hundredAvatarList .second {
-        div {
-          background: #FFECEC;
-          border-radius: 50%;
-          border: 3px solid #FFFFFF;
-          width: 80px;
-          height: 80px;
-          margin: 15px 15px;
-
-          img {
-            width: 40px;
-            height: 8px;
-            border: none;
-            border-radius: 0;
-          }
-        }
-
-      }
-
-      .hundredAvatarList div {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        align-items: center;
-
-        .avatarImg {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          border: 3px solid #FFFFFF;
-          margin: 15px 15px;
-        }
-      }
-
-      .bar {
-        width: 660px;
-        height: 1px;
-        background: #F5F5F5;
-        margin-top: 9px;
-      }
-
-      .latestJoin {
-        // margin-top: 30px;
-        height: 87px;
-        display: flex;
-        align-items: center;
-
-        img {
-          width: 45px;
-          height: 45px;
-          border-radius: 50%;
-          margin-right: 15px;
-        }
-
-        span {
-          font-family: PingFang SC;
-          font-weight: 500;
-          font-size: 24px;
-          color: #1C1C1C;
-        }
-      }
-    }
-  }
-
-  .shareArrow {
-    width: 380px;
-    height: 240px;
-    position: fixed;
-    right: 0;
-  }
-}
-
-:deep(.van-swipe-item) {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-:deep(.van-swipe__indicator) {
-  width: 10px;
-  height: 10px;
-}
-
-:deep(.van-swipe) {
-  height: 100%;
-}
-
-:deep(.van-dialog) {
-  overflow-y: scroll;
-  margin-top: 30px;
-  height: 90%;
-}
-
-:deep(.van-barrage) {
-  width: 100%;
-  height: 87px;
-}
-
-:deep(.van-barrage__item) {
-  font-family: PingFang SC;
-  font-weight: 500;
-  font-size: 24px;
-  color: #1C1C1C;
+  font-weight: bold;
+  color: #FFFFFF;
 }
 </style>
