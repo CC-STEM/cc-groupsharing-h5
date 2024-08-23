@@ -234,6 +234,13 @@ export interface GetSignupListRes extends BaseResponse {
   data: StudentInfoType[]
 }
 
+export interface GetLatestSignupRes extends BaseResponse {
+  data: {
+    childrenName: string
+    mobile: string
+  }
+}
+
 export enum GRADE_TYPE_ENUM {
   PRESCHOOL = 1,
   PRIMARYLOWGRADE = 2,

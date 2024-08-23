@@ -1,5 +1,5 @@
 import axiosIns from './instance'
-import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHasJoinGroupRes, GetHistoryOrderListRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, GetSignupListRes, GetStudentInfoRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, RecommendRankRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
+import type { AddGroupBuyingOrderReq, AddGroupBuyingOrderRes, AddStudentInfoReq, BaseResponse, DeleteGroupBuyingOrderReq, GetGroupSharingDataRes, GetHasJoinGroupRes, GetHistoryOrderListRes, GetLatestSignupRes, GetOpenIdReq, GetOpenIdRes, GetSharedGroupDataRes, GetSignupListRes, GetStudentInfoRes, PhoneLoginReq, PhoneLoginRes, PrepayReq, PrepayRes, RecommendRankRes, getAuthConfigReq, getAuthConfigRes } from '@/typing'
 
 export function tranformQueryInfoToString<T>(queryInfo: T) {
   const queryInfoWithValueString: Record<string, string> = {}
@@ -138,5 +138,12 @@ export function getSignupList(groupBuyingId: string) {
   return axiosIns<GetSignupListRes>({
     method: 'GET',
     url: `/app/h5/activity/${groupBuyingId}`,
+  })
+}
+
+export function getLatestSignupInfo(groupBuyingId: string) {
+  return axiosIns<GetLatestSignupRes>({
+    method: 'GET',
+    url: `/app/h5/activity/lastest/signup/${groupBuyingId}`,
   })
 }

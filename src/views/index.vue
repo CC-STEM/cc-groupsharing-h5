@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import wx from 'weixin-js-sdk'
 import { useRoute, useRouter } from 'vue-router'
 
 import { closeToast, showLoadingToast, showToast } from 'vant'
 import type { GroupOrderInfo, GroupSharingCardInfo, StudentInfoType } from '@/typing'
 
-import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
+import { addGroupBuyingOrder, addStudentInfo, checkIsInGroup, getGroupSharingData, getInitSDKAuthConfig, getLatestSignupInfo, getSharedGroupData, getWxOpenId, wxPrepay } from '@/services'
 import { useWXStateStore } from '@/stores'
 
 import { clearLoginInfo, getLoginInfo } from '@/utils/index'
@@ -23,8 +23,11 @@ const router = useRouter()
 const route = useRoute()
 
 const curGroupOrderInfo = ref<GroupOrderInfo | null>(null)
-const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
+// const curPath = Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
+const getCurPath = () => Object.entries(route.query).map(item => `${item[0]}=${item[1]}`).join('&')
 const isWxReady = ref(false)
+const refreshSignupInfoTimer = ref(null)
+
 const curLoginInfo = computed(() => {
   return getLoginInfo()
 })
@@ -79,6 +82,7 @@ const shareInfo = computed(() => {
 
 // 报名 == 拼团中的参团
 async function handleJoinGroup() {
+  const curPath = getCurPath()
   // 检查当前是否有登录态
   const loginInfo = getLoginInfo()
   if (!(loginInfo?.token)) {
@@ -111,10 +115,15 @@ function logout() {
 }
 
 function handleClickSignupList() {
+  // e.preventDefault();
+  const curPath = getCurPath()
+  console.log('******route.query', route.query)
+  console.log('******curPath', curPath)
+  // alert('***********')
   if (!route.query.groupBuyingId) {
     if (curSelectedCard.value) {
       const groupBuyingId = curSelectedCard.value.id
-      router.push(`/SignupList?${curPath ? `${curPath}&` : ''}groupBuyingId=${groupBuyingId}`)
+      router.push(`/SignupList?${curPath ? (`${curPath}&`) : ''}groupBuyingId=${groupBuyingId}`)
       return
     }
   }
@@ -123,11 +132,13 @@ function handleClickSignupList() {
 
 // 跳转推荐量排名列表
 function handleClickRecommendList() {
+  const curPath = getCurPath()
+
   console.log('curPath', curPath)
   if (!route.query.groupBuyingId) {
     if (curSelectedCard.value) {
       const groupBuyingId = curSelectedCard.value.id
-      router.push(`/RecommendList?${curPath ? `${curPath}&` : ''}groupBuyingId=${groupBuyingId}`)
+      router.push(`/RecommendList?${curPath ? (`${curPath}&`) : ''}groupBuyingId=${groupBuyingId}`)
       return
     }
   }
@@ -204,7 +215,7 @@ async function handlePay(studentInfo: StudentInfoType) {
                 // 跳转到主页  如果是单买则不带订单id跳转
                 if (curBuyStatus.value === 0) {
                   showToast('报名成功')
-                  router.push(`/?groupBuyingOrderId=${orderId}&shareUser=${query.shareUser}`)
+                  router.push(`/?groupBuyingId=${groupBuyingId}&groupBuyingOrderId=${orderId}&shareUser=${query.shareUser}`)
                 }
 
                 if (curBuyStatus.value === 1) {
@@ -298,6 +309,21 @@ watch([shareInfo, isWxReady], (newVal) => {
     }
   }
 }, { immediate: true })
+
+onMounted(() => {
+  if (route.query.groupBuyingId) {
+    refreshSignupInfoTimer.value = setInterval(async () => {
+      const { data: { data } } = await getLatestSignupInfo(route.query.groupBuyingId as string)
+      if (data)
+        realActivityMsg.value = `${data.childrenName ? (`${data.childrenName.slice(0, 1)}**`) : data.mobile.slice(-4)}刚刚报名参加了活动`
+    }, 10000)
+  }
+})
+
+onUnmounted(() => {
+  if (refreshSignupInfoTimer.value)
+    clearInterval(refreshSignupInfoTimer.value)
+})
 
 // 微信相关
 // 用户授权，回调，获取openID
