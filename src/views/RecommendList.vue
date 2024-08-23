@@ -38,7 +38,7 @@ const myRankInfo = computed<RecommendRankItem | null>(() => {
 })
 
 function safeName(info: RecommendRankItem) {
-  return `${info.nickName.slice(0, 1)}**` + `(${info.mobile.slice(-4)})`
+  return `${info.nickName ? info.nickName.slice(0, 1) : ''}**` + `(${info.mobile.slice(-4)})`
 }
 
 watchEffect(async () => {
@@ -138,7 +138,7 @@ watchEffect(async () => {
           <img :src="IpLogo" alt="">
           <div>
             <span>{{ myRankInfo?.nickName }}</span>
-            <span>(1234)</span>
+            <span>({{ myRankInfo?.mobile?.slice(-4) }})</span>
           </div>
         </div>
         <div class="myRecommed">

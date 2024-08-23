@@ -50,8 +50,14 @@ const shareInfo = computed(() => {
   const lastShareUser = route.query.shareUser
   let shareLink = `${window.location.origin}${window.location.pathname}`
   const loginInfo = getLoginInfo()
-  // 当前用户已登录，且当前打开的是一个拼团，用户又已参与过这个团，分享的就是自己的，其他情况都按上一个人的转发
-  if (loginInfo && loginInfo.phone && route.query.groupBuyingOrderId && curGroupOrderInfo.value?.isInOrder)
+  // // 当前用户已登录，且当前打开的是一个拼团，用户又已参与过这个团，分享的就是自己的，其他情况都按上一个人的转发
+  // if (loginInfo && loginInfo.phone && route.query.groupBuyingOrderId && curGroupOrderInfo.value?.isInOrder)
+  //   shareLink += `?shareUser=${loginInfo.phone}`
+  // else
+  //   shareLink += `?shareUser=${lastShareUser}`
+
+  // 当前分享人设定逻辑，当前用户打开页面，只要已登录，转发人就设定为当前人，否则设定为上一个人
+  if (loginInfo && loginInfo.phone)
     shareLink += `?shareUser=${loginInfo.phone}`
   else
     shareLink += `?shareUser=${lastShareUser}`
