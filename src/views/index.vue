@@ -472,7 +472,7 @@ initWxConfig()
     </div>
     <div class="toolbar">
       <div class="rankAndSignList">
-        <span @click="handleClickRecommendList">推荐好友排名</span>
+        <span @click="handleClickRecommendList">推荐排名</span>
         <div class="signupListBtn" @click="handleClickSignupList">
           报名列表
         </div>
@@ -556,7 +556,7 @@ initWxConfig()
 
     span {
       line-height: 25px;
-      margin-left: 22px;
+      margin-left: 40px;
       height: 25px;
       font-family: PingFang SC;
       font-weight: 800;

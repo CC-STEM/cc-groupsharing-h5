@@ -51,7 +51,7 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <PageView :has-nav-bar="true" title="推荐好友排名" style="background: linear-gradient(181deg, #FFFED8, #FFFFFF);">
+  <PageView :has-nav-bar="true" title="推荐排名" style="background: linear-gradient(181deg, #FFFED8, #FFFFFF);">
     <div class="recommendContainer">
       <div class="podiumBg">
         <img class="podium" :src="Podium" alt="">
