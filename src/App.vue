@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import type { ConfigProviderTheme } from 'vant'
+import { reactive } from 'vue'
 import { localStorage } from '@/utils/local-storage'
 import { useStore } from '@/stores'
 
 const store = useStore()
 const theme = ref<ConfigProviderTheme>('light')
 const mode = computed(() => store.mode)
+
+const themeVars = reactive({
+  dialogMessageFontSize: '15px',
+  fontSizeMd: '15px',
+})
 
 watch(mode, (val) => {
   if (val === 'dark' || localStorage.get('theme') === 'dark') {
@@ -24,7 +30,7 @@ provide('isRealDark', computed(() => theme.value === 'dark'))
 </script>
 
 <template>
-  <VanConfigProvider :theme="theme">
+  <VanConfigProvider :theme-vars="themeVars">
     <RouterView />
   </VanConfigProvider>
 </template>

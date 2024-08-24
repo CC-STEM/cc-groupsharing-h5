@@ -64,6 +64,7 @@ async function toPay() {
     console.log('e', e)
     showDialog({
       message: '请填写完成学生信息',
+      teleport: '.pageContainer',
     }).then(() => {
       // on close
     })
@@ -133,11 +134,6 @@ watch(() => studentInfo.value.gradeType, (newVal) => {
 .formContainer {
   width: 100%;
   height: auto;
-}
-
-:root {
-  --van-picker-action-font-size: 30px;
-  --van-picker-title-font-size: 30px;
 }
 
 // :deep(.van-form) {

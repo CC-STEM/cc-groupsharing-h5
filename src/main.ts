@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createRouterScroller } from 'vue-router-better-scroller'
-import { ActionSheet, FloatingBubble } from 'vant'
+import { ActionSheet, ConfigProvider, FloatingBubble } from 'vant'
 
 import App from './App.vue'
 import router from './router'
@@ -39,6 +39,7 @@ if (import.meta.env.MODE === 'test') {
 
 pinia.use(piniaPluginPersistedstate)
 
+app.use(ConfigProvider)
 app.use(router)
 app.use(pinia)
 app.use(ActionSheet)
